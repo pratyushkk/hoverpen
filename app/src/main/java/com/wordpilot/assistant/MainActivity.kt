@@ -21,15 +21,19 @@ class MainActivity : ComponentActivity() {
 
         val isSendAction = intent?.action == Intent.ACTION_SEND && intent?.type?.startsWith("text/") == true
         val sharedText = if (isSendAction) intent?.getStringExtra(Intent.EXTRA_TEXT) else null
-        val startDest = if (!sharedText.isNullOrBlank()) {
-            Routes.EDITOR
-        } else {
-            intent?.getStringExtra("navigate_to") ?: Routes.HOME
-        }
 
         setContent {
             val app = application as WordPilotApp
             val theme by app.userPreferences.theme.collectAsState(initial = "system")
+            val onboardingCompleted by app.userPreferences.onboardingCompleted.collectAsState(initial = true)
+
+            val startDest = if (!sharedText.isNullOrBlank()) {
+                Routes.EDITOR
+            } else if (!onboardingCompleted) {
+                Routes.ONBOARDING
+            } else {
+                intent?.getStringExtra("navigate_to") ?: Routes.HOME
+            }
 
             WordPilotTheme(themePreference = theme) {
                 Surface(modifier = Modifier.fillMaxSize()) {

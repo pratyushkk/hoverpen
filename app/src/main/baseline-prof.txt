@@ -1,0 +1,60 @@
+# Baseline Profile for Hoverpen / WordPilot
+# Generated for ART AOT optimization of startup, Compose UI, and overlay latency.
+
+# Application & Lifecycle
+Lcom/wordpilot/assistant/WordPilotApp;
+Lcom/wordpilot/assistant/MainActivity;
+Lcom/wordpilot/assistant/overlay/WordPilotAccessibilityService;
+Lcom/wordpilot/assistant/overlay/WordPilotTileService;
+Lcom/wordpilot/assistant/widget/WordPilotWidgetProvider;
+
+# Floating Overlay Engine & Geometry
+Lcom/wordpilot/assistant/overlay/FloatingAssistantController;
+Lcom/wordpilot/assistant/overlay/OverlayGeometry;
+Lcom/wordpilot/assistant/overlay/FloatingSuggestionCard;
+Lcom/wordpilot/assistant/model/FloatingUiModel;
+Lcom/wordpilot/assistant/model/BubbleState;
+Lcom/wordpilot/assistant/model/CardState;
+Lcom/wordpilot/assistant/model/CorrectionList;
+Lcom/wordpilot/assistant/model/FloatingEvent;
+
+# Compose UI Composables
+Lcom/wordpilot/assistant/ui/floating/FloatingAssistantViewKt;
+Lcom/wordpilot/assistant/ui/floating/FloatingBubbleKt;
+Lcom/wordpilot/assistant/ui/home/HomeScreenKt;
+Lcom/wordpilot/assistant/ui/settings/AppearanceSettingsScreenKt;
+Lcom/wordpilot/assistant/ui/settings/AppearanceSettings;
+Lcom/wordpilot/assistant/ui/theme/ThemeKt;
+Lcom/wordpilot/assistant/ui/theme/ColorKt;
+Lcom/wordpilot/assistant/ui/theme/GradientPresetsKt;
+
+# Jetpack Compose Core Runtime
+Landroidx/compose/runtime/Composer;
+Landroidx/compose/runtime/ComposerImpl;
+Landroidx/compose/runtime/RecomposeScopeImpl;
+Landroidx/compose/runtime/State;
+Landroidx/compose/runtime/MutableState;
+Landroidx/compose/runtime/SnapshotStateKt;
+Landroidx/compose/runtime/internal/ComposableLambdaImpl;
+
+# Jetpack Compose UI & Layout
+Landroidx/compose/ui/Modifier;
+Landroidx/compose/ui/node/LayoutNode;
+Landroidx/compose/ui/platform/ComposeView;
+Landroidx/compose/ui/platform/AndroidComposeView;
+Landroidx/compose/ui/unit/Dp;
+
+# Material3 Core Components
+Landroidx/compose/material3/SurfaceKt;
+Landroidx/compose/material3/TextKt;
+Landroidx/compose/material3/ButtonKt;
+Landroidx/compose/material3/CardKt;
+Landroidx/compose/material3/IconKt;
+Landroidx/compose/material3/MaterialTheme;
+
+# Coroutines & Flows
+Lkotlinx/coroutines/flow/StateFlow;
+Lkotlinx/coroutines/flow/MutableStateFlow;
+Lkotlinx/coroutines/flow/FlowKt;
+Lkotlinx/coroutines/Dispatchers;
+Lkotlinx/coroutines/CoroutineScope;

@@ -6,18 +6,31 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.draw.scale
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
@@ -46,10 +59,12 @@ fun FloatingBubble(
     onClick: () -> Unit,
     onDrag: (Float, Float) -> Unit,
     onDragEnd: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     isExpanded: Boolean = false,
     errorCount: Int = 0,
     isChecking: Boolean = false,
+    hasError: Boolean = false,
     badgeColor: Color = AssistantColors.BadgeGrammar
 ) {
     // Auto-dimming state tracking
@@ -85,19 +100,32 @@ fun FloatingBubble(
 
     val animatedSizeDp by animateDpAsState(
         targetValue = targetSizeDp,
-        animationSpec = if (isExpanded) {
-            tween(durationMillis = 280, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))
-        } else {
-            tween(durationMillis = 220, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
-        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "bubbleAnchorSize"
     )
 
     val targetIconSizeDp = if (isExpanded) 18.dp else settings.iconSizeDp.dp
     val animatedIconSizeDp by animateDpAsState(
         targetValue = targetIconSizeDp,
-        animationSpec = tween(durationMillis = 240),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "bubbleIconSize"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "pulseRing")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.90f,
+        targetValue = 1.10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
     )
 
     val shape = settings.bubbleShape.toShape(
@@ -124,9 +152,7 @@ fun FloatingBubble(
                 },
                 onDragEnd = {
                     lastInteractionTimestamp = System.currentTimeMillis()
-                    try {
-                        view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
-                    } catch (_: Exception) {}
+                    try { view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK) } catch (_: SecurityException) {} catch (_: IllegalStateException) {}
                     onDragEnd()
                 },
                 onDragCancel = {
@@ -148,19 +174,24 @@ fun FloatingBubble(
     Box(
         modifier = modifier
             .size(animatedSizeDp)
+            .scale(if (isChecking) pulseScale else 1f)
             .then(gestureModifier)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {
-                    lastInteractionTimestamp = System.currentTimeMillis()
-                    isDimmed = false
-                    try {
-                        view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
-                    } catch (_: Exception) {}
-                    onClick()
-                }
-            ),
+            .pointerInput(isExpanded) {
+                detectTapGestures(
+                    onTap = {
+                        lastInteractionTimestamp = System.currentTimeMillis()
+                        isDimmed = false
+                        try { view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY) } catch (_: SecurityException) {} catch (_: IllegalStateException) {}
+                        onClick()
+                    },
+                    onLongPress = {
+                        lastInteractionTimestamp = System.currentTimeMillis()
+                        isDimmed = false
+                        try { view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS) } catch (_: SecurityException) {} catch (_: IllegalStateException) {}
+                        onLongClick()
+                    }
+                )
+            },
         contentAlignment = Alignment.Center
     ) {
         val activeGradient = if (errorCount > 0 && !isExpanded && !isChecking) {
@@ -178,6 +209,7 @@ fun FloatingBubble(
         }
 
         val centerState = when {
+            hasError -> -2
             isChecking -> 0
             !isExpanded && errorCount > 0 -> errorCount
             else -> -1
@@ -214,6 +246,14 @@ fun FloatingBubble(
                     label = "bubbleCenterContentTransition"
                 ) { state ->
                     when {
+                        state == -2 -> {
+                            Icon(
+                                imageVector = Icons.Filled.Warning,
+                                contentDescription = "Engine Offline",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(animatedIconSizeDp)
+                            )
+                        }
                         state == 0 -> {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(animatedIconSizeDp),
@@ -257,6 +297,38 @@ fun FloatingBubble(
                     }
                 }
             }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BubbleDismissSheet(
+    onDismissRequest: () -> Unit,
+    onHide1h: () -> Unit,
+    onHideUntilTomorrow: () -> Unit,
+    onTurnOff: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Hoverpen Assistant", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
+            ListItem(
+                headlineContent = { Text("Hide for 1 hour") },
+                leadingContent = { Icon(Icons.Filled.Timer, contentDescription = null) },
+                modifier = Modifier.clickable { onHide1h() }
+            )
+            ListItem(
+                headlineContent = { Text("Hide until tomorrow") },
+                leadingContent = { Icon(Icons.Filled.Bedtime, contentDescription = null) },
+                modifier = Modifier.clickable { onHideUntilTomorrow() }
+            )
+            ListItem(
+                headlineContent = { Text("Turn off", color = MaterialTheme.colorScheme.error) },
+                leadingContent = { Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                modifier = Modifier.clickable { onTurnOff() }
+            )
         }
     }
 }

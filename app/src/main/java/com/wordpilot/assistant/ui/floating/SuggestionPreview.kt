@@ -84,10 +84,20 @@ fun SuggestionPreview(
                         modifier = Modifier.size(15.dp)
                     )
                     Text(
-                        text = if (isLoading) "Rewriting..." else if (currentTone.isNotBlank()) "$currentTone Tone" else "Review",
+                        text = "Hoverpen",
                         color = AssistantColors.TextPrimary,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    AssistChip(
+                        onClick = {},
+                        label = { Text(selectedEngine.displayName, fontSize = 10.sp) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        modifier = Modifier.height(24.dp)
                     )
                 }
 
@@ -239,7 +249,7 @@ fun SuggestionPreview(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Replace",
+                        text = "Replace text",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )

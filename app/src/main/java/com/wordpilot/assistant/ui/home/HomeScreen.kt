@@ -94,14 +94,14 @@ fun HomeScreen(
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                try { context.startActivity(intent) } catch (e: Exception) {}
+                try { context.startActivity(intent) } catch (e: android.content.ActivityNotFoundException) {} catch (e: SecurityException) {}
             },
             onOpenAppSettings = {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.parse("package:${context.packageName}")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                try { context.startActivity(intent) } catch (e: Exception) {}
+                try { context.startActivity(intent) } catch (e: android.content.ActivityNotFoundException) {} catch (e: SecurityException) {}
             }
         )
     }
@@ -306,91 +306,93 @@ fun HomeScreen(
                 (if (!geminiApiKey.isNullOrBlank()) 1 else 0) +
                 (if (isBatteryOptimized) 1 else 0)
 
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Assistant Setup",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (completedSteps == totalSteps) Color(0xFF10B981).copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer
+            AnimatedVisibility(visible = completedSteps < totalSteps) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "$completedSteps of $totalSteps Ready",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (completedSteps == totalSteps) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                text = "Assistant Setup",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
                             )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Row 1: Accessibility Service
-                    SetupChecklistRow(
-                        title = "Accessibility Service",
-                        description = if (isServiceActive) "Active & monitoring text inputs" else "Required for floating bubble & overlay",
-                        isDone = isServiceActive,
-                        actionLabel = if (isServiceActive) "Settings" else "Enable",
-                        onClick = {
-                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (completedSteps == totalSteps) Color(0xFF10B981).copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    text = "$completedSteps of $totalSteps Ready",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (completedSteps == totalSteps) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
                             }
-                            try { context.startActivity(intent) } catch (e: Exception) {}
                         }
-                    )
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                    // Row 2: Gemini API Key
-                    SetupChecklistRow(
-                        title = "Gemini Model (V2 AI)",
-                        description = if (!geminiApiKey.isNullOrBlank()) "Connected for Rewrite & 4 Tone styles" else "Enter free API key to activate tone rewrites",
-                        isDone = !geminiApiKey.isNullOrBlank(),
-                        actionLabel = if (!geminiApiKey.isNullOrBlank()) "Manage" else "Add Key",
-                        onClick = onNavigateToApiSettings
-                    )
+                        // Row 1: Accessibility Service
+                        SetupChecklistRow(
+                            title = "Accessibility Service",
+                            description = if (isServiceActive) "Active & monitoring text inputs" else "Required for floating bubble & overlay",
+                            isDone = isServiceActive,
+                            actionLabel = if (isServiceActive) "Settings" else "Enable",
+                            onClick = {
+                                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                try { context.startActivity(intent) } catch (e: android.content.ActivityNotFoundException) {} catch (e: SecurityException) {}
+                            }
+                        )
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 8.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 8.dp))
 
-                    // Row 3: Battery Optimization
-                    SetupChecklistRow(
-                        title = "Battery Background Guard",
-                        description = if (isBatteryOptimized) "Unrestricted: Android won't sleep assistant" else "Prevent Android OS from killing assistant",
-                        isDone = isBatteryOptimized,
-                        actionLabel = if (isBatteryOptimized) "Protected" else "Fix",
-                        onClick = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                try {
-                                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                        data = Uri.parse("package:${context.packageName}")
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                    }
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
+                        // Row 2: Gemini API Key
+                        SetupChecklistRow(
+                            title = "Gemini Model (V2 AI)",
+                            description = if (!geminiApiKey.isNullOrBlank()) "Connected for Rewrite & 4 Tone styles" else "Enter free API key to activate tone rewrites",
+                            isDone = !geminiApiKey.isNullOrBlank(),
+                            actionLabel = if (!geminiApiKey.isNullOrBlank()) "Manage" else "Add Key",
+                            onClick = onNavigateToApiSettings
+                        )
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 8.dp))
+
+                        // Row 3: Battery Optimization
+                        SetupChecklistRow(
+                            title = "Battery Background Guard",
+                            description = if (isBatteryOptimized) "Unrestricted: Android won't sleep assistant" else "Prevent Android OS from killing assistant",
+                            isDone = isBatteryOptimized,
+                            actionLabel = if (isBatteryOptimized) "Protected" else "Fix",
+                            onClick = {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                     try {
-                                        val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                            data = Uri.parse("package:${context.packageName}")
                                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                         }
-                                        context.startActivity(fallbackIntent)
-                                    } catch (_: Exception) {}
+                                        context.startActivity(intent)
+                                    } catch (e: android.content.ActivityNotFoundException) {
+                                        try {
+                                            val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                            }
+                                            context.startActivity(fallbackIntent)
+                                        } catch (_: android.content.ActivityNotFoundException) {} catch (_: SecurityException) {}
+                                    } catch (e: SecurityException) {}
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
 
@@ -541,6 +543,140 @@ fun HomeScreen(
                     }
                 }
             }
+
+
+            // =========================================================================
+            // RECENT IMPROVEMENTS & ACTIVITY
+            // =========================================================================
+            val recentDocuments by app.historyRepository.getAllDocuments().collectAsState(initial = emptyList())
+            val recentFixes = remember(recentDocuments) { recentDocuments.take(5) }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.History,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Recent Improvements",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                if (recentFixes.isNotEmpty()) {
+                    TextButton(
+                        onClick = onNavigateToHistory,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text("View all (${recentDocuments.size})", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+
+            if (recentFixes.isEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Outlined.AutoFixNormal,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "No recent corrections yet",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Type anywhere with Hoverpen enabled and accepted fixes will automatically appear here.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    recentFixes.forEach { doc ->
+                        Surface(
+                            onClick = onNavigateToHistory,
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF10B981).copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Check,
+                                        contentDescription = null,
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = doc.title.ifBlank { "Text improvement" },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = doc.content.take(80),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                }
+                                Icon(
+                                    Icons.Filled.ChevronRight,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // =========================================================================
             // 4. QUICK TOOLS & STUDIOS HUB

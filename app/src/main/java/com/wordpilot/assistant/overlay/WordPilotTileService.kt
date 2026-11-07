@@ -98,8 +98,11 @@ class WordPilotTileService : TileService() {
                 if (servicesList.isNotEmpty()) "1" else "0"
             )
             true
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to write secure settings directly", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security error writing secure settings directly", e)
+            false
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "State error writing secure settings directly", e)
             false
         }
     }

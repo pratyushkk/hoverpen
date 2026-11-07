@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.PixelFormat
+import android.graphics.PointF
+import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -14,8 +16,12 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,12 +49,15 @@ import com.wordpilot.assistant.domain.models.CorrectionCategory
 import com.wordpilot.assistant.domain.models.EditorSnapshot
 import com.wordpilot.assistant.domain.models.RewriteStyle
 import com.wordpilot.assistant.domain.models.TextOperationResult
+import com.wordpilot.assistant.model.*
 import com.wordpilot.assistant.overlay.OverlayGeometry
 import com.wordpilot.assistant.ui.floating.FloatingAssistantView
 import com.wordpilot.assistant.ui.floating.FloatingUiState
 import com.wordpilot.assistant.ui.navigation.Routes
 import com.wordpilot.assistant.ui.settings.AppearanceSettings
 import com.wordpilot.assistant.ui.theme.WordPilotTheme
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -60,6 +69,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import kotlin.math.min
 
 class FloatingAssistantController(
     private val context: Context,
@@ -90,7 +101,14 @@ class FloatingAssistantController(
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     private val safeReplacementHelper = SafeReplacementHelper()
-    private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val controllerExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        when (throwable) {
+            is CancellationException -> Unit
+            is IOException -> Log.w(TAG, "Network I/O error in overlay", throwable)
+            else -> Log.e(TAG, "Unexpected failure in overlay controller", throwable)
+        }
+    }
+    private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main + controllerExceptionHandler)
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private var overlayView: View? = null
@@ -179,13 +197,45 @@ class FloatingAssistantController(
 
     fun isExpanded(): Boolean = isInteracting()
 
+    fun computeSafeBounds(context: Context): Rect {
+        val wm = context.getSystemService(WindowManager::class.java)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = wm.currentWindowMetrics
+            val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() or
+                WindowInsets.Type.displayCutout() or
+                WindowInsets.Type.navigationBars()
+            )
+            val b = metrics.bounds
+            Rect(
+                b.left + insets.left,
+                b.top + insets.top,
+                b.right - insets.right,
+                b.bottom - insets.bottom
+            )
+        } else {
+            val dm = context.resources.displayMetrics
+            val navId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+            val navH = if (navId > 0) context.resources.getDimensionPixelSize(navId) else 0
+            val statId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+            val statH = if (statId > 0) context.resources.getDimensionPixelSize(statId) else 0
+            Rect(0, statH, dm.widthPixels, dm.heightPixels - navH)
+        }
+    }
+
+    fun clampToSafeBounds(x: Int, y: Int, w: Int, h: Int, safe: Rect): PointF {
+        val clampedX = x.coerceIn(safe.left, (safe.right - w).coerceAtLeast(safe.left))
+        val clampedY = y.coerceIn(safe.top, (safe.bottom - h).coerceAtLeast(safe.top))
+        return PointF(clampedX.toFloat(), clampedY.toFloat())
+    }
+
     fun getScreenDimensions(): Pair<Int, Int> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
                 val windowMetrics = windowManager.currentWindowMetrics
                 val bounds = windowMetrics.bounds
                 Pair(bounds.width(), bounds.height())
-            } catch (_: Exception) {
+            } catch (e: IllegalStateException) {
                 val dm = context.resources.displayMetrics
                 Pair(dm.widthPixels, dm.heightPixels)
             }
@@ -279,8 +329,10 @@ class FloatingAssistantController(
         }
         try {
             windowManager.updateViewLayout(view, lp)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating window layout for state $state", e)
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "View not attached during layout update for state $state", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "View detached during layout update for state $state", e)
         }
     }
 
@@ -417,8 +469,18 @@ class FloatingAssistantController(
                 _activeCorrectionsList.value = valid
                 _activeCorrection.value = valid.firstOrNull()
                 _errorCount.value = valid.size
-            } catch (e: Exception) {
+            } catch (e: CancellationException) {
                 _isChecking.value = false
+                throw e
+            } catch (e: IOException) {
+                _isChecking.value = false
+                Log.w(TAG, "Network error during grammar check", e)
+            } catch (e: SecurityException) {
+                _isChecking.value = false
+                Log.e(TAG, "Permission denied during grammar check", e)
+            } catch (e: IllegalStateException) {
+                _isChecking.value = false
+                Log.w(TAG, "Engine not ready during grammar check", e)
             }
         }
     }
@@ -589,10 +651,23 @@ class FloatingAssistantController(
                 if (requestId != currentRequestId) return@launch
                 _previewImprovedText.value = fixed
                 _isPreviewLoading.value = false
-            } catch (e: Exception) {
+            } catch (e: CancellationException) {
+                _isPreviewLoading.value = false
+                throw e
+            } catch (e: IOException) {
                 if (requestId != currentRequestId) return@launch
-                Log.e(TAG, "Error in executeFixGrammar", e)
-                _previewErrorMessage.value = "Failed to fix grammar: ${e.localizedMessage}"
+                Log.w(TAG, "Network error in executeFixGrammar", e)
+                _previewErrorMessage.value = "Network error: check connection"
+                _isPreviewLoading.value = false
+            } catch (e: SecurityException) {
+                if (requestId != currentRequestId) return@launch
+                Log.e(TAG, "Security error in executeFixGrammar", e)
+                _previewErrorMessage.value = "Permission error"
+                _isPreviewLoading.value = false
+            } catch (e: IllegalStateException) {
+                if (requestId != currentRequestId) return@launch
+                Log.w(TAG, "Engine not ready in executeFixGrammar", e)
+                _previewErrorMessage.value = "Engine not ready"
                 _isPreviewLoading.value = false
             }
         }
@@ -631,10 +706,20 @@ class FloatingAssistantController(
                 } else {
                     _previewErrorMessage.value = result.errorMessage ?: "Rewrite failed"
                 }
-            } catch (e: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IOException) {
                 if (requestId != currentRequestId) return@launch
-                Log.e(TAG, "Error in executeRewrite", e)
-                _previewErrorMessage.value = "Failed: ${e.localizedMessage}"
+                Log.w(TAG, "Network error in executeRewrite", e)
+                _previewErrorMessage.value = "Network error: check connection"
+            } catch (e: SecurityException) {
+                if (requestId != currentRequestId) return@launch
+                Log.e(TAG, "Security error in executeRewrite", e)
+                _previewErrorMessage.value = "Permission error"
+            } catch (e: IllegalStateException) {
+                if (requestId != currentRequestId) return@launch
+                Log.w(TAG, "Engine not ready in executeRewrite", e)
+                _previewErrorMessage.value = "Engine not ready"
             } finally {
                 if (requestId == currentRequestId) {
                     _isPreviewLoading.value = false
@@ -813,7 +898,11 @@ class FloatingAssistantController(
                     return clipText
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Cannot access clipboard without focus", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Clipboard in invalid state", e)
+        }
         return ""
     }
 
@@ -825,23 +914,25 @@ class FloatingAssistantController(
         val view = overlayView ?: return
         val lp = windowLayoutParams ?: return
         val (screenWidth, screenHeight) = getScreenDimensions()
+        val safeBounds = computeSafeBounds(context)
         val density = context.resources.displayMetrics.density
         val s = appearanceSettings.value
 
         val minX = if (s.edgeTuckEnabled) {
             OverlayGeometry.getTuckedX(isNearRightEdge = false, s.bubbleSizeDp, screenWidth, density, s.edgeTuckPercent)
         } else {
-            0
+            safeBounds.left
         }
         val maxX = if (s.edgeTuckEnabled) {
             OverlayGeometry.getTuckedX(isNearRightEdge = true, s.bubbleSizeDp, screenWidth, density, s.edgeTuckPercent)
         } else {
-            (screenWidth - lp.width).coerceAtLeast(0)
+            (safeBounds.right - lp.width).coerceAtLeast(safeBounds.left)
         }
-        val maxY = (screenHeight - lp.height).coerceAtLeast(0)
+        val minY = safeBounds.top
+        val maxY = (screenHeight - lp.height).coerceAtLeast(minY)
 
         val newX = (lp.x + deltaX.toInt()).coerceIn(minX, maxX)
-        val newY = (lp.y - deltaY.toInt()).coerceIn(0, maxY)
+        val newY = (lp.y - deltaY.toInt()).coerceIn(minY, maxY)
 
         lp.x = newX
         lp.y = newY
@@ -853,8 +944,10 @@ class FloatingAssistantController(
 
         try {
             windowManager.updateViewLayout(view, lp)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating drag position", e)
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "View not attached during drag update", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "View in invalid state during drag update", e)
         }
     }
 
@@ -896,7 +989,11 @@ class FloatingAssistantController(
                 bubbleRestingX = animatedX
                 try {
                     windowManager.updateViewLayout(view, lp)
-                } catch (_: Exception) {}
+                } catch (e: IllegalArgumentException) {
+                    Log.w(TAG, "View not attached during snap animation", e)
+                } catch (e: IllegalStateException) {
+                    Log.w(TAG, "View in invalid state during snap animation", e)
+                }
             }
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
@@ -950,6 +1047,10 @@ class FloatingAssistantController(
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.BOTTOM
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
             val initialX = if (s.edgeTuckEnabled) {
                 OverlayGeometry.getTuckedX(_isNearRightEdge.value, s.bubbleSizeDp, displayMetrics.widthPixels, density, s.edgeTuckPercent)
             } else {
@@ -984,6 +1085,51 @@ class FloatingAssistantController(
                 val tone by _currentTone.collectAsState()
                 val activeEngine by WordPilotApp.instance.rewriteCoordinator.selectedEngine.collectAsState()
 
+                val cardMode = when (currentUiState) {
+                    FloatingUiState.PREVIEW -> CardMode.PREVIEW
+                    FloatingUiState.TONE_SELECTOR -> CardMode.TONE
+                    FloatingUiState.GEMINI_KEY_SETUP -> CardMode.GEMINI_KEY
+                    else -> CardMode.CORRECTIONS
+                }
+
+                val uiModel = remember(
+                    settings, currentUiState, nearRight, errCount, checking,
+                    activeCorr, allCorrections, origText, imprText, prevLoading,
+                    prevError, undoAvailable, tone, activeEngine
+                ) {
+                    FloatingUiModel(
+                        settings = settings,
+                        uiState = currentUiState,
+                        bubble = BubbleState(
+                            isNearRightEdge = nearRight,
+                            errorCount = errCount,
+                            isChecking = checking
+                        ),
+                        card = CardState(
+                            isExpanded = currentUiState != FloatingUiState.COLLAPSED,
+                            mode = cardMode,
+                            preview = PreviewState(
+                                originalText = origText,
+                                improvedText = imprText,
+                                currentTone = tone,
+                                isLoading = prevLoading,
+                                errorMessage = prevError
+                            )
+                        ),
+                        engine = EngineInfo(
+                            id = activeEngine.name,
+                            displayName = activeEngine.displayName
+                        ),
+                        corrections = CorrectionList(
+                            items = allCorrections,
+                            activeCorrection = activeCorr,
+                            activeCorrections = allCorrections.map { it.id }.toSet()
+                        ),
+                        undo = UndoState(canUndo = undoAvailable),
+                        error = prevError?.let { UserFacingError.Generic(it) }
+                    )
+                }
+
                 WordPilotTheme {
                     Box(
                         modifier = Modifier
@@ -992,54 +1138,33 @@ class FloatingAssistantController(
                         contentAlignment = if (nearRight) Alignment.BottomEnd else Alignment.BottomStart
                     ) {
                         FloatingAssistantView(
-                            settings = settings,
-                            uiState = currentUiState,
-                            isNearRightEdge = nearRight,
-                            errorCount = errCount,
-                            isChecking = checking,
-                            activeCorrection = activeCorr,
-                            activeCorrections = allCorrections,
-                            previewOriginalText = origText,
-                            previewImprovedText = imprText,
-                            isPreviewLoading = prevLoading,
-                            previewErrorMessage = prevError,
-                            canUndo = undoAvailable,
-                            currentTone = tone,
-                            onBubbleClick = {
-                                if (currentUiState == FloatingUiState.COLLAPSED) {
-                                    setUiState(FloatingUiState.EXPANDED)
-                                    if (_activeCorrectionsList.value.isEmpty() && getTargetText().isNotBlank()) {
-                                        checkTextNow()
-                                    }
-                                } else {
-                                    setUiState(FloatingUiState.COLLAPSED)
-                                }
-                            },
-                            onDrag = { dx, dy -> onDrag(dx, dy) },
-                            onDragEnd = { onDragEnd() },
-                            onActionClick = { actionId -> onActionSelected(actionId) },
-                            onCustomPromptSubmit = { prompt -> onCustomPromptSubmit(prompt) },
-                            onSelectTone = { selectedTone -> onToneSelected(selectedTone) },
-                            onReplace = { applyPreviewReplacement() },
-                            onInsert = { insertPreviewText() },
-                            onCopy = { copyPreviewText() },
-                            onCancelPreview = { setUiState(FloatingUiState.COLLAPSED) },
-                            onUndo = { undoLastChange() },
-                            onOpenSettings = { openAppearanceSettings() },
-                            onCollapse = { setUiState(FloatingUiState.COLLAPSED) },
-                            onAcceptCorrection = { correction -> acceptCorrection(correction) },
-                            onDismissCorrection = { dismissCurrentCorrection() },
-                            onAcceptAll = { acceptAllCorrections() },
-                            onReviewAll = { executeFixGrammar() },
-                            onCollapseTransitionCompleted = { onCollapseTransitionCompleted() },
-                                                        selectedEngine = activeEngine,
-                            onSelectEngine = { onSelectEngine(it) },
-                            onToneOptionSelect = { style, title -> executeRewrite(style, title) },
-                            onGeminiKeySaved = { key -> saveGeminiApiKeyFromOverlay(key) }
+                            model = uiModel,
+                            onEvent = { event -> handleFloatingEvent(event) }
                         )
                     }
                 }
             }
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(composeView) { v, insets ->
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val safe = computeSafeBounds(context)
+            val availableHeight = safe.height() - ime
+            if (_uiState.value != FloatingUiState.COLLAPSED) {
+                windowLayoutParams?.let { lp ->
+                    if (lp.height > availableHeight && availableHeight > 0) {
+                        lp.height = availableHeight
+                        try {
+                            windowManager.updateViewLayout(v, lp)
+                        } catch (e: IllegalArgumentException) {
+                            Log.w(TAG, "View not attached on IME resize", e)
+                        } catch (e: IllegalStateException) {
+                            Log.w(TAG, "View detached on IME resize", e)
+                        }
+                    }
+                }
+            }
+            insets
         }
 
         try {
@@ -1048,9 +1173,12 @@ class FloatingAssistantController(
             isViewAttached = true
             updateWindowLayoutForState(_uiState.value)
             Log.d(TAG, "Overlay attached on screen at x=$savedX, y=$savedY")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to attach overlay", e)
+        } catch (e: WindowManager.BadTokenException) {
+            Log.e(TAG, "Bad token while adding overlay — service may be stopping", e)
             isViewAttached = false
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Overlay view already attached", e)
+            isViewAttached = true
         }
     }
 
@@ -1058,12 +1186,66 @@ class FloatingAssistantController(
         if (!isViewAttached || overlayView == null) return
         try {
             windowManager.removeView(overlayView)
-        } catch (e: Exception) {
-            // View might already be detached
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "Overlay view not attached to window manager", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Overlay view already detached", e)
         } finally {
             overlayView = null
             isViewAttached = false
         }
+    }
+
+    fun handleFloatingEvent(event: FloatingEvent) {
+        when (event) {
+            is FloatingEvent.OnBubbleClick -> {
+                if (_uiState.value == FloatingUiState.COLLAPSED) {
+                    setUiState(FloatingUiState.EXPANDED)
+                    if (_activeCorrectionsList.value.isEmpty() && getTargetText().isNotBlank()) {
+                        checkTextNow()
+                    }
+                } else {
+                    setUiState(FloatingUiState.COLLAPSED)
+                }
+            }
+            is FloatingEvent.OnBubbleLongClick -> {
+                setUiState(FloatingUiState.COLLAPSED)
+            }
+            is FloatingEvent.OnDrag -> onDrag(event.dx, event.dy)
+            is FloatingEvent.OnDragEnd -> onDragEnd()
+            is FloatingEvent.OnAccept -> {
+                val corr = _activeCorrectionsList.value.firstOrNull { it.id == event.correctionId }
+                    ?: _activeCorrection.value
+                if (corr != null) acceptCorrection(corr)
+            }
+            is FloatingEvent.OnDismiss -> dismissCurrentCorrection()
+            is FloatingEvent.OnAcceptAll -> acceptAllCorrections()
+            is FloatingEvent.OnReviewAll -> executeFixGrammar()
+            is FloatingEvent.OnUndo -> undoLastChange()
+            is FloatingEvent.OnReplace -> applyPreviewReplacement()
+            is FloatingEvent.OnInsert -> insertPreviewText()
+            is FloatingEvent.OnCopy -> copyPreviewText()
+            is FloatingEvent.OnCancelPreview -> setUiState(FloatingUiState.COLLAPSED)
+            is FloatingEvent.OnOpenSettings -> openAppearanceSettings()
+            is FloatingEvent.OnCollapse -> setUiState(FloatingUiState.COLLAPSED)
+            is FloatingEvent.OnCollapseTransitionCompleted -> onCollapseTransitionCompleted()
+            is FloatingEvent.OnActionClick -> onActionSelected(event.actionId)
+            is FloatingEvent.OnCustomPromptSubmit -> onCustomPromptSubmit(event.prompt)
+            is FloatingEvent.OnSelectTone -> onToneSelected(event.tone)
+            is FloatingEvent.OnSelectToneOption -> executeRewrite(event.style, event.title)
+            is FloatingEvent.OnSelectEngine -> onSelectEngine(event.engineType)
+            is FloatingEvent.OnGeminiKeySaved -> saveGeminiApiKeyFromOverlay(event.key)
+            is FloatingEvent.OnHide1h -> hideForDuration(3600_000L)
+            is FloatingEvent.OnHideUntilTomorrow -> hideForDuration(86400_000L)
+            is FloatingEvent.OnTurnOff -> hideAssistant()
+        }
+    }
+
+    fun hideForDuration(durationMs: Long) {
+        hideAssistant()
+        mainHandler.postDelayed({
+            showAssistant()
+        }, durationMs)
     }
 
     fun destroy() {

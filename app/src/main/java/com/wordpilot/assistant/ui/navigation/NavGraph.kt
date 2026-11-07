@@ -14,8 +14,10 @@ import com.wordpilot.assistant.ui.rewrite.RewriteScreen
 import com.wordpilot.assistant.ui.settings.ApiSettingsScreen
 import com.wordpilot.assistant.ui.settings.AppearanceSettingsScreen
 import com.wordpilot.assistant.ui.settings.SettingsScreen
+import com.wordpilot.assistant.ui.onboarding.OnboardingPagerScreen
 
 object Routes {
+    const val ONBOARDING = "onboarding"
     const val HOME = "home"
     const val EDITOR = "editor"
     const val EDITOR_WITH_DOC = "editor/{docId}"
@@ -38,6 +40,15 @@ fun WordPilotNavGraph(
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Routes.ONBOARDING) {
+            OnboardingPagerScreen(
+                onFinished = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Routes.HOME) {
             HomeScreen(
                 onNavigateToEditor = { navController.navigate(Routes.EDITOR) },

@@ -29,6 +29,8 @@ import com.wordpilot.assistant.domain.models.TextOperationResult
 import com.wordpilot.assistant.engine.SentenceSpan
 import com.wordpilot.assistant.ui.floating.FloatingUiState
 import com.wordpilot.assistant.utils.Debouncer
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,6 +39,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 
 class WordPilotAccessibilityService : AccessibilityService(),
     LifecycleOwner,
@@ -57,7 +60,14 @@ class WordPilotAccessibilityService : AccessibilityService(),
     override val viewModelStore: ViewModelStore get() = store
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val serviceExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        when (throwable) {
+            is CancellationException -> Unit
+            is IOException -> Log.w(TAG, "Network hiccup in service scope", throwable)
+            else -> Log.e(TAG, "Unexpected failure in service scope", throwable)
+        }
+    }
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main + serviceExceptionHandler)
     private val debouncer = Debouncer(serviceScope, 450L)
     private val safeReplacementHelper = SafeReplacementHelper()
 
@@ -105,7 +115,9 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 WordPilotApp.instance.userPreferences.autoPauseBankingEnabled.collect {
                     isAutoPauseBankingEnabled = it
                 }
-            } catch (e: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IllegalStateException) {
                 Log.e(TAG, "Error collecting autoPauseBankingEnabled", e)
             }
         }
@@ -422,7 +434,9 @@ class WordPilotAccessibilityService : AccessibilityService(),
                     false
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: IllegalStateException) {
+            false
+        } catch (e: SecurityException) {
             false
         }
     }
@@ -446,8 +460,10 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.let { if (isEditableNode(it)) return it }
                 findFocusedEditable(root)?.let { return it }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking rootInActiveWindow", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Window detached while checking rootInActiveWindow", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security error checking rootInActiveWindow", e)
         }
 
         // 2. Search all interactive non-IME windows
@@ -459,8 +475,10 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)?.let { if (isEditableNode(it)) return it }
                 findFocusedEditable(root)?.let { return it }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error searching windows", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Window detached while searching windows", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security error searching windows", e)
         }
 
         return null
@@ -522,7 +540,9 @@ class WordPilotAccessibilityService : AccessibilityService(),
 
             val cursor = try {
                 targetNode.textSelectionStart.takeIf { it in 0..text.length } ?: text.length
-            } catch (_: Exception) {
+            } catch (e: IllegalStateException) {
+                text.length
+            } catch (e: SecurityException) {
                 text.length
             }
             val currentSentenceSpan = lastActiveSentenceSpan ?: app.sentenceAnalyzer.findCurrentSentence(text, cursor)
@@ -564,8 +584,14 @@ class WordPilotAccessibilityService : AccessibilityService(),
                     controller?.clearCorrection()
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error analyzing text", e)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            Log.w(TAG, "Network error analyzing text", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security exception analyzing text", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Node or state error analyzing text", e)
         } finally {
             withContext(Dispatchers.Main) {
                 floatingController?.setChecking(false)
@@ -623,8 +649,12 @@ class WordPilotAccessibilityService : AccessibilityService(),
                     }
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error applying correction", e)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Node detached before replace — dropping suggestion", e)
+            floatingController?.setChecking(false)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Accessibility revoked mid-operation", e)
+            stopSelf()
         }
     }
 
@@ -669,9 +699,14 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 cm.setPrimaryClip(ClipData.newPlainText("Hoverpen Text", fullText))
                 TextOperationResult.Failure("Field does not support direct replacement. Text copied to clipboard.")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error applying full text replacement", e)
-            TextOperationResult.Failure("Error replacing text: ${e.localizedMessage}")
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Node detached before replace — dropping suggestion", e)
+            floatingController?.setChecking(false)
+            TextOperationResult.Failure("Field detached before text replacement")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Accessibility revoked mid-operation", e)
+            stopSelf()
+            TextOperationResult.Failure("Accessibility permission revoked")
         }
     }
 
@@ -730,9 +765,14 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 cm.setPrimaryClip(ClipData.newPlainText("Hoverpen Text", newSentence))
                 TextOperationResult.Failure("Field does not support direct replacement. Text copied to clipboard.")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error applying sentence replacement", e)
-            TextOperationResult.Failure("Error replacing text: ${e.localizedMessage}")
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Node detached before replace — dropping suggestion", e)
+            floatingController?.setChecking(false)
+            TextOperationResult.Failure("Field detached before text replacement")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Accessibility revoked mid-operation", e)
+            stopSelf()
+            TextOperationResult.Failure("Accessibility permission revoked")
         }
     }
 
@@ -762,9 +802,13 @@ class WordPilotAccessibilityService : AccessibilityService(),
             } else {
                 TextOperationResult.Failure("Failed to restore text")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in undoLastReplacement", e)
-            TextOperationResult.Failure("Error undoing replacement: ${e.localizedMessage}")
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Node detached before undo", e)
+            TextOperationResult.Failure("Field detached before undo")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Accessibility revoked mid-operation", e)
+            stopSelf()
+            TextOperationResult.Failure("Accessibility permission revoked")
         }
     }
 
@@ -807,9 +851,13 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 cm.setPrimaryClip(ClipData.newPlainText("Hoverpen Text", textToInsert))
                 TextOperationResult.Failure("Field does not support direct insertion. Text copied to clipboard.")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error in insertTextToNode", e)
-            TextOperationResult.Failure("Error inserting text: ${e.localizedMessage}")
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Node detached before insert", e)
+            TextOperationResult.Failure("Field detached before insert")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Accessibility revoked mid-operation", e)
+            stopSelf()
+            TextOperationResult.Failure("Accessibility permission revoked")
         }
     }
 

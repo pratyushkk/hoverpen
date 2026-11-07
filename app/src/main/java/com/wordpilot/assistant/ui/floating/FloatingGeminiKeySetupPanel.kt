@@ -269,7 +269,9 @@ fun FloatingGeminiKeySetupPanel(
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
                             context.startActivity(browserIntent)
-                        } catch (e: Exception) {
+                        } catch (e: android.content.ActivityNotFoundException) {
+                            Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+                        } catch (e: SecurityException) {
                             Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
                         }
                     },

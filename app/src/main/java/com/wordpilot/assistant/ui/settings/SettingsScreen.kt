@@ -90,26 +90,58 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Appearance
+            // Group 1: Assistant
+            SettingsSection(title = "Assistant") {
+                SettingsSwitch(
+                    title = "Auto Check While Typing",
+                    subtitle = "Continuously analyze text as you type",
+                    checked = uiState.autoCheckEnabled,
+                    onCheckedChange = { viewModel.setAutoCheckEnabled(it) }
+                )
+                SettingsSwitch(
+                    title = "Grammar Checking",
+                    subtitle = "Detect and fix grammatical issues",
+                    checked = uiState.grammarCheckEnabled,
+                    onCheckedChange = { viewModel.setGrammarCheckEnabled(it) }
+                )
+                SettingsSwitch(
+                    title = "Spell Checking",
+                    subtitle = "Detect and suggest correctly spelled words",
+                    checked = uiState.spellCheckEnabled,
+                    onCheckedChange = { viewModel.setSpellCheckEnabled(it) }
+                )
+                SettingsClickable(
+                    title = "Floating Tone & Rewrite Options",
+                    subtitle = "Select which quick tones appear in your floating panel (Fix & Polish, Short, Rewrite, Polite, etc.)",
+                    onClick = onNavigateToAiWindowStudio
+                )
+                SettingsClickable(
+                    title = "Personal Dictionary",
+                    subtitle = "Manage your custom words and ignored rules",
+                    onClick = onNavigateToDictionary
+                )
+            }
+
+            // Group 2: Appearance
             SettingsSection(title = "Appearance") {
                 SettingsThemeSelector(
                     currentTheme = uiState.theme,
                     onThemeSelected = { viewModel.setTheme(it) }
                 )
-                                SettingsClickable(
+                SettingsClickable(
                     title = "Appearance & Layout Studio",
-                    subtitle = "Customize bubble size (smaller/bigger), alert gradients & glass styling",
+                    subtitle = "Customize bubble size, curated gradient presets, and edge tuck",
                     onClick = onNavigateToBubbleCustomization
                 )
                 SettingsClickable(
-                    title = "AI Window Studio",
+                    title = "AI Window & Tone Studio",
                     subtitle = "Customize floating AI chat dimensions, typewriter speed, glass theme & prompts",
                     onClick = onNavigateToAiWindowStudio
                 )
             }
 
-            // API Providers & Failover (Dedicated, Clean Hub)
-            SettingsSection(title = "Grammar Engine & APIs") {
+            // Group 3: Engines & Keys
+            SettingsSection(title = "Engines & Keys") {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -164,35 +196,8 @@ fun SettingsScreen(
                 }
             }
 
-            // Writing & Correction Preferences
-            SettingsSection(title = "Writing & Correction") {
-                SettingsSwitch(
-                    title = "Grammar Checking",
-                    subtitle = "Detect and fix grammatical issues",
-                    checked = uiState.grammarCheckEnabled,
-                    onCheckedChange = { viewModel.setGrammarCheckEnabled(it) }
-                )
-                SettingsSwitch(
-                    title = "Spell Checking",
-                    subtitle = "Detect and suggest correctly spelled words",
-                    checked = uiState.spellCheckEnabled,
-                    onCheckedChange = { viewModel.setSpellCheckEnabled(it) }
-                )
-                SettingsSwitch(
-                    title = "Auto Check While Typing",
-                    subtitle = "Continuously analyze text as you type",
-                    checked = uiState.autoCheckEnabled,
-                    onCheckedChange = { viewModel.setAutoCheckEnabled(it) }
-                )
-                SettingsClickable(
-                    title = "Floating Tone & Rewrite Options",
-                    subtitle = "Select which quick tones appear in your floating panel (Fix & Polish, Short, Rewrite, Polite, etc.)",
-                    onClick = onNavigateToAiWindowStudio
-                )
-            }
-
-            // Banking & App Shield
-            SettingsSection(title = "Privacy & Banking Shield") {
+            // Group 4: Privacy
+            SettingsSection(title = "Privacy") {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -243,24 +248,19 @@ fun SettingsScreen(
                         val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
                         }
-                        try { context.startActivity(intent) } catch (e: Exception) {}
+                        try {
+                            context.startActivity(intent)
+                        } catch (_: android.content.ActivityNotFoundException) {} catch (_: SecurityException) {}
                     }
                 )
-            }
 
-            // Data & History
-            SettingsSection(title = "Data & Dictionary") {
-                SettingsClickable(
-                    title = "Personal Dictionary",
-                    subtitle = "Manage your custom words and ignored rules",
-                    onClick = onNavigateToDictionary
-                )
                 SettingsSwitch(
                     title = "Document History",
                     subtitle = "Save drafts locally in the app",
                     checked = uiState.historyEnabled,
                     onCheckedChange = { viewModel.setHistoryEnabled(it) }
                 )
+
                 SettingsClickable(
                     title = "Clear All Local Data",
                     subtitle = "Delete dictionary, history, and preferences",
@@ -269,8 +269,8 @@ fun SettingsScreen(
                 )
             }
 
-            // Privacy & About
-            SettingsSection(title = "About & Privacy") {
+            // Group 5: About
+            SettingsSection(title = "About") {
                 SettingsClickable(
                     title = "Privacy Policy & Details",
                     subtitle = "How Hoverpen protects your privacy and text",

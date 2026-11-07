@@ -20,6 +20,7 @@ import com.wordpilot.assistant.domain.models.AIEngineType
 import com.wordpilot.assistant.domain.models.Correction
 import com.wordpilot.assistant.domain.models.CorrectionCategory
 import com.wordpilot.assistant.domain.models.RewriteStyle
+import com.wordpilot.assistant.model.*
 import com.wordpilot.assistant.ui.settings.AppearanceSettings
 import com.wordpilot.assistant.ui.theme.AssistantColors
 
@@ -29,6 +30,72 @@ enum class FloatingUiState {
     TONE_SELECTOR,
     PREVIEW,
     GEMINI_KEY_SETUP
+}
+
+@Composable
+fun FloatingAssistantView(
+    model: FloatingUiModel,
+    onEvent: (FloatingEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val settings = model.settings
+    val uiState = model.uiState
+    val isNearRightEdge = model.bubble.isNearRightEdge
+    val errorCount = model.bubble.errorCount
+    val isChecking = model.bubble.isChecking
+    val activeCorrection = model.corrections.activeCorrection
+    val activeCorrections = model.corrections.items
+    val previewState = model.card.preview
+    val previewOriginalText = previewState?.originalText ?: ""
+    val previewImprovedText = previewState?.improvedText ?: ""
+    val isPreviewLoading = previewState?.isLoading ?: false
+    val previewErrorMessage = previewState?.errorMessage
+    val canUndo = model.undo.canUndo
+    val currentTone = previewState?.currentTone ?: "Default"
+    val selectedEngine = try {
+        AIEngineType.valueOf(model.engine.id)
+    } catch (_: IllegalArgumentException) {
+        AIEngineType.GEMINI_FLASH
+    }
+
+    FloatingAssistantView(
+        settings = settings,
+        uiState = uiState,
+        isNearRightEdge = isNearRightEdge,
+        errorCount = errorCount,
+        isChecking = isChecking,
+        activeCorrection = activeCorrection,
+        activeCorrections = activeCorrections,
+        previewOriginalText = previewOriginalText,
+        previewImprovedText = previewImprovedText,
+        isPreviewLoading = isPreviewLoading,
+        previewErrorMessage = previewErrorMessage,
+        canUndo = canUndo,
+        currentTone = currentTone,
+        onBubbleClick = { onEvent(FloatingEvent.OnBubbleClick) },
+        onDrag = { dx, dy -> onEvent(FloatingEvent.OnDrag(dx, dy)) },
+        onDragEnd = { onEvent(FloatingEvent.OnDragEnd) },
+        onActionClick = { onEvent(FloatingEvent.OnActionClick(it)) },
+        onCustomPromptSubmit = { onEvent(FloatingEvent.OnCustomPromptSubmit(it)) },
+        onSelectTone = { onEvent(FloatingEvent.OnSelectTone(it)) },
+        onToneOptionSelect = { style, title -> onEvent(FloatingEvent.OnSelectToneOption(style, title)) },
+        onReplace = { onEvent(FloatingEvent.OnReplace) },
+        onInsert = { onEvent(FloatingEvent.OnInsert) },
+        onCopy = { onEvent(FloatingEvent.OnCopy) },
+        onCancelPreview = { onEvent(FloatingEvent.OnCancelPreview) },
+        onUndo = { onEvent(FloatingEvent.OnUndo) },
+        onOpenSettings = { onEvent(FloatingEvent.OnOpenSettings) },
+        onCollapse = { onEvent(FloatingEvent.OnCollapse) },
+        onAcceptCorrection = { onEvent(FloatingEvent.OnAccept(it.id)) },
+        onDismissCorrection = { onEvent(FloatingEvent.OnDismiss(activeCorrection?.id ?: "")) },
+        onAcceptAll = { onEvent(FloatingEvent.OnAcceptAll) },
+        onReviewAll = { onEvent(FloatingEvent.OnReviewAll) },
+        onCollapseTransitionCompleted = { onEvent(FloatingEvent.OnCollapseTransitionCompleted) },
+        selectedEngine = selectedEngine,
+        onSelectEngine = { onEvent(FloatingEvent.OnSelectEngine(it)) },
+        onGeminiKeySaved = { onEvent(FloatingEvent.OnGeminiKeySaved(it)) },
+        modifier = modifier
+    )
 }
 
 @Composable

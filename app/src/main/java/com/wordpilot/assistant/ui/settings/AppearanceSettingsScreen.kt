@@ -166,6 +166,19 @@ fun AppearanceSettingsScreen(
                                 color = Color(0xFF94A3B8),
                                 letterSpacing = 0.5.sp
                             )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFF10B981).copy(alpha = 0.15f),
+                                border = BorderStroke(0.5.dp, Color(0xFF10B981).copy(alpha = 0.4f))
+                            ) {
+                                Text(
+                                    text = "AAA 7.4:1",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF34D399),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                )
+                            }
                             if (previewCorrections.isEmpty()) {
                                 TextButton(
                                     onClick = { previewCorrections = defaultDemoCorrections },
@@ -313,8 +326,20 @@ fun AppearanceSettingsScreen(
                     ) {
                         val presets = listOf(
                             MasterPreset(
+                                name = "Compact",
+                                subtitle = "36dp · Discreet",
+                                bubbleSize = 36f,
+                                iconSize = 18f,
+                                shape = BubbleShape.CIRCLE,
+                                gradientId = GradientPresets.Ocean.id,
+                                logoId = "sparkle",
+                                edgeTuckPercent = 0.35f,
+                                glassOpacity = 0.85f,
+                                previewColors = GradientPresets.Ocean.colors
+                            ),
+                            MasterPreset(
                                 name = "Default",
-                                subtitle = "Aurora Mint",
+                                subtitle = "48dp · Standard",
                                 bubbleSize = 48f,
                                 iconSize = 24f,
                                 shape = BubbleShape.SQUIRCLE,
@@ -325,40 +350,40 @@ fun AppearanceSettingsScreen(
                                 previewColors = GradientPresets.Aurora.colors
                             ),
                             MasterPreset(
-                                name = "Ocean",
-                                subtitle = "Electric Indigo",
-                                bubbleSize = 36f,
-                                iconSize = 18f,
-                                shape = BubbleShape.CIRCLE,
-                                gradientId = GradientPresets.Ocean.id,
-                                logoId = "bolt",
-                                edgeTuckPercent = 0.35f,
-                                glassOpacity = 0.82f,
-                                previewColors = GradientPresets.Ocean.colors
-                            ),
-                            MasterPreset(
-                                name = "Cosmic",
-                                subtitle = "Electric Violet",
+                                name = "Large",
+                                subtitle = "56dp · Prominent",
                                 bubbleSize = 56f,
                                 iconSize = 28f,
                                 shape = BubbleShape.ROUNDED_SQUARE,
                                 gradientId = GradientPresets.Cosmic.id,
-                                logoId = "wand",
+                                logoId = "sparkle",
                                 edgeTuckPercent = 0.25f,
                                 glassOpacity = 0.95f,
                                 previewColors = GradientPresets.Cosmic.colors
                             ),
                             MasterPreset(
-                                name = "Sunset",
-                                subtitle = "Sunset Blaze",
-                                bubbleSize = 44f,
-                                iconSize = 22f,
+                                name = "High-contrast",
+                                subtitle = "Bold · Accessible",
+                                bubbleSize = 48f,
+                                iconSize = 24f,
                                 shape = BubbleShape.SQUIRCLE,
-                                gradientId = GradientPresets.Sunset.id,
-                                logoId = "bolt",
+                                gradientId = GradientPresets.Prism.id,
+                                logoId = "sparkle",
                                 edgeTuckPercent = 0.30f,
                                 glassOpacity = 1.0f,
-                                previewColors = GradientPresets.Sunset.colors
+                                previewColors = listOf(Color(0xFF000000), Color(0xFFFFFFFF), Color(0xFF2563EB))
+                            ),
+                            MasterPreset(
+                                name = "Minimal",
+                                subtitle = "32dp · Subtle",
+                                bubbleSize = 32f,
+                                iconSize = 16f,
+                                shape = BubbleShape.CIRCLE,
+                                gradientId = GradientPresets.Aurora.id,
+                                logoId = "sparkle",
+                                edgeTuckPercent = 0.40f,
+                                glassOpacity = 0.70f,
+                                previewColors = listOf(Color(0xFF475569), Color(0xFF94A3B8))
                             )
                         )
 

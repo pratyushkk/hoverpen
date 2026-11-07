@@ -37,7 +37,10 @@ class UserPreferences(
         val GRAMMARBOT_API_KEY = stringPreferencesKey("grammarbot_api_key_enc")
         val GRAMMARBOT_ENABLED = booleanPreferencesKey("grammarbot_enabled")
         val GRAMMAR_PROVIDER_PRIORITY = stringPreferencesKey("grammar_provider_priority")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     }
+
+    val onboardingCompleted: Flow<Boolean> = context.dataStore.data.map { it[ONBOARDING_COMPLETED] ?: false }
 
     val blockCloudAi: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[BLOCK_CLOUD_AI] ?: false
@@ -148,6 +151,10 @@ class UserPreferences(
                 prefs[SELECTED_ENGINE] = "rule_based"
             }
         }
+    }
+
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        context.dataStore.edit { it[ONBOARDING_COMPLETED] = completed }
     }
 
     suspend fun clearAll() {

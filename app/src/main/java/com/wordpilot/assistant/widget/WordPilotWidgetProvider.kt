@@ -54,8 +54,10 @@ class WordPilotWidgetProvider : AppWidgetProvider() {
                             context,
                             ComponentName(context, WordPilotTileService::class.java)
                         )
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to update QS tile", e)
+                    } catch (e: SecurityException) {
+                        Log.w(TAG, "Security exception updating QS tile", e)
+                    } catch (e: IllegalStateException) {
+                        Log.w(TAG, "State exception updating QS tile", e)
                     }
                 }
                 return
@@ -165,8 +167,11 @@ class WordPilotWidgetProvider : AppWidgetProvider() {
                     if (servicesList.isNotEmpty()) "1" else "0"
                 )
                 true
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to write secure settings directly from widget", e)
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Security exception writing secure settings from widget", e)
+                false
+            } catch (e: IllegalStateException) {
+                Log.w(TAG, "State exception writing secure settings from widget", e)
                 false
             }
         }
