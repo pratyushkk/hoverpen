@@ -136,7 +136,7 @@ fun AiWindowCustomizationScreen(
                                         .background(Color(0xFF10B981))
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("WordPilot AI", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Text("Hoverpen AI", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             }
                             Icon(
                                 imageVector = Icons.Filled.Close,
@@ -319,7 +319,7 @@ fun AiWindowCustomizationScreen(
             StudioCard(title = "FLOATING QUICK TONE OPTIONS") {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "WordPilot defaults to 4 core quick tones (Fix & Polish, Short, Rewrite, Polite). Choose which tone options appear in your floating panel:",
+                        text = "Hoverpen defaults to 4 core quick tones (Fix & Polish, Short, Rewrite, Polite). Choose which tone options appear in your floating panel:",
                         color = AssistantColors.TextSecondary,
                         fontSize = 12.sp
                     )

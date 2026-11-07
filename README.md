@@ -1,24 +1,24 @@
-# WordPilot — System-Wide Android AI Writing Assistant
+# Hoverpen — System-Wide Android AI Writing Assistant
 
-[![Release v2.0](https://img.shields.io/badge/Release-v2.0%20(Latest)-emerald?style=for-the-badge&logo=android)](https://github.com/pratyushkk/WordPilot/releases/tag/v2.0)
-[![Release v1.0](https://img.shields.io/badge/Release-v1.0%20(Legacy)-blue?style=for-the-badge&logo=android)](https://github.com/pratyushkk/WordPilot/releases/tag/v1.0)
-[![Website](https://img.shields.io/badge/Website-pratyushkk.github.io%2FWordPilot-teal?style=for-the-badge&logo=googlechrome)](https://pratyushkk.github.io/WordPilot/)
+[![Release v2.0](https://img.shields.io/badge/Release-v2.0%20(Latest)-emerald?style=for-the-badge&logo=android)](https://github.com/pratyushkk/Hoverpen/releases/tag/v2.0)
+[![Release v1.0](https://img.shields.io/badge/Release-v1.0%20(Legacy)-blue?style=for-the-badge&logo=android)](https://github.com/pratyushkk/Hoverpen/releases/tag/v1.0)
+[![Website](https://img.shields.io/badge/Website-pratyushkk.github.io%2FHoverpen-teal?style=for-the-badge&logo=googlechrome)](https://pratyushkk.github.io/Hoverpen/)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026--35)-blue?style=for-the-badge&logo=android)](https://developer.android.com)
 [![Architecture](https://img.shields.io/badge/Architecture-Kotlin%20%7C%20Compose%20%7C%20MVVM-purple?style=for-the-badge&logo=kotlin)](https://kotlinlang.org)
-[![Privacy](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%7C%20Banking%20Shield-green?style=for-the-badge&logo=shield)](https://github.com/pratyushkk/WordPilot)
+[![Privacy](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%7C%20Banking%20Shield-green?style=for-the-badge&logo=shield)](https://github.com/pratyushkk/Hoverpen)
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange?style=for-the-badge)](LICENSE)
 
-WordPilot is a production-grade, privacy-first Android writing assistant engineered to provide seamless, real-time grammar, spelling, and tone corrections across third-party applications. Featuring a non-intrusive floating overlay, sequential 3-tier AI failover, frosted glass aesthetics, and automated privacy shields, WordPilot elevates writing quality across any messaging, email, document, or social media app.
+Hoverpen is a production-grade, privacy-first Android writing assistant engineered to provide seamless, real-time grammar, spelling, and tone corrections across third-party applications. Featuring a non-intrusive floating overlay, sequential 3-tier AI failover, frosted glass aesthetics, and automated privacy shields, Hoverpen elevates writing quality across any messaging, email, document, or social media app.
 
 ---
 
 ## 📥 Downloads (v2.0 Latest & v1.0 Stable)
 
-Choose between the latest feature-packed **WordPilot v2.0** or the legacy stable **WordPilot v1.0**:
+Choose between the latest feature-packed **Hoverpen v2.0** or the legacy stable **Hoverpen v1.0**:
 
-### 🌟 WordPilot v2.0 (Latest Recommended Release)
-* **Direct APK Download**: [**WordPilot-v2.0.apk**](https://github.com/pratyushkk/WordPilot/releases/download/v2.0/WordPilot-v2.0.apk) `(12.9 MB)`
-* **GitHub Release Page**: [**WordPilot v2.0 Release Assets & Changelog**](https://github.com/pratyushkk/WordPilot/releases/tag/v2.0)
+### 🌟 Hoverpen v2.0 (Latest Recommended Release)
+* **Direct APK Download**: [**Hoverpen-v2.0.apk**](https://github.com/pratyushkk/Hoverpen/releases/download/v2.0/Hoverpen-v2.0.apk) `(12.9 MB)`
+* **GitHub Release Page**: [**Hoverpen v2.0 Release Assets & Changelog**](https://github.com/pratyushkk/Hoverpen/releases/tag/v2.0)
 * **What's New in v2.0**:
   * ✨ **Gemini Core AI Model**: Google Gemini 2.5 Flash powers instant text restructuring and tone transforms.
   * 🎛️ **Dedicated `✨ AI` Expander Window**: Clean one-touch AI trigger button in the floating pill.
@@ -30,9 +30,9 @@ Choose between the latest feature-packed **WordPilot v2.0** or the legacy stable
 
 ---
 
-### 📦 WordPilot v1.0 (Stable Legacy Release)
-* **Direct APK Download**: [**WordPilot-v1.0.apk**](https://github.com/pratyushkk/WordPilot/releases/download/v1.0/WordPilot-v1.0.apk) `(12.3 MB)`
-* **GitHub Release Page**: [**WordPilot v1.0 Release Assets & Changelog**](https://github.com/pratyushkk/WordPilot/releases/tag/v1.0)
+### 📦 Hoverpen v1.0 (Stable Legacy Release)
+* **Direct APK Download**: [**Hoverpen-v1.0.apk**](https://github.com/pratyushkk/Hoverpen/releases/download/v1.0/Hoverpen-v1.0.apk) `(12.3 MB)`
+* **GitHub Release Page**: [**Hoverpen v1.0 Release Assets & Changelog**](https://github.com/pratyushkk/Hoverpen/releases/tag/v1.0)
 * **Core v1.0 Highlights**:
   * Original floating bubble overlay with 1-tap word replacement chips.
   * Dual-provider failover: Sapling AI (Primary) + LanguageTool (Fallback).
@@ -70,7 +70,7 @@ Choose between the latest feature-packed **WordPilot v2.0** or the legacy stable
 
 ### 4. Privacy & Banking Shield
 * **Automated Banking Shield**: Detects 50+ banking, wallet, payment, and UPI applications (including Google Pay, PhonePe, Paytm, banking apps, and sensitive credential fields) and automatically pauses the assistant for privacy.
-* **Automatic Resumption**: When switching back to any regular app (WhatsApp, Chrome, Notes, Gmail) or tapping standard text fields, WordPilot immediately unpauses and resumes assistance.
+* **Automatic Resumption**: When switching back to any regular app (WhatsApp, Chrome, Notes, Gmail) or tapping standard text fields, Hoverpen immediately unpauses and resumes assistance.
 * **Quick Controls**: Includes an Android Quick Settings Tile and a 1-tap Home Screen Widget for rapid manual toggling.
 * **Zero Telemetry**: No user analytics, no keystroke tracking, and no external tracking libraries.
 
@@ -84,17 +84,17 @@ Choose between the latest feature-packed **WordPilot v2.0** or the legacy stable
 ## 🚀 Quick Setup Guide
 
 ### Step 1: Install APK
-Download either [**WordPilot-v2.0.apk**](https://github.com/pratyushkk/WordPilot/releases/download/v2.0/WordPilot-v2.0.apk) (Recommended) or [**WordPilot-v1.0.apk**](https://github.com/pratyushkk/WordPilot/releases/download/v1.0/WordPilot-v1.0.apk) and tap to install on your Android device.
+Download either [**Hoverpen-v2.0.apk**](https://github.com/pratyushkk/Hoverpen/releases/download/v2.0/Hoverpen-v2.0.apk) (Recommended) or [**Hoverpen-v1.0.apk**](https://github.com/pratyushkk/Hoverpen/releases/download/v1.0/Hoverpen-v1.0.apk) and tap to install on your Android device.
 
 ### Step 2: Enable Accessibility Service
-1. Open **WordPilot** and tap **"Floating Assistant (Cross-App)"** or **"Accessibility & Auto-Pause Guide"**.
+1. Open **Hoverpen** and tap **"Floating Assistant (Cross-App)"** or **"Accessibility & Auto-Pause Guide"**.
 2. Tap **"Open Accessibility Settings"**.
 3. In system settings, navigate to **Downloaded apps** (or **Installed services**).
-4. Select **WordPilot Assistant**, toggle it **ON**, and tap **"Allow"**.
-5. *(Optional - HyperOS / MIUI / ColorOS)*: If prompted with *"Restricted setting"*, go to Phone Settings ➔ Apps ➔ WordPilot ➔ tap 3 dots (upper-right) ➔ tap *"Allow restricted settings"*, then re-enable accessibility.
+4. Select **Hoverpen Assistant**, toggle it **ON**, and tap **"Allow"**.
+5. *(Optional - HyperOS / MIUI / ColorOS)*: If prompted with *"Restricted setting"*, go to Phone Settings ➔ Apps ➔ Hoverpen ➔ tap 3 dots (upper-right) ➔ tap *"Allow restricted settings"*, then re-enable accessibility.
 
 ### Step 3: Configure APIs
-1. Open WordPilot and navigate to **API Providers & Keys**.
+1. Open Hoverpen and navigate to **API Providers & Keys**.
 2. **Gemini Model (V2 AI)**:
    * Paste your free Google Gemini API Key from Google AI Studio to unlock real-time rewrite & 8 tone styles.
 3. **Sapling AI (Primary Grammar)**:
@@ -109,7 +109,7 @@ Download either [**WordPilot-v2.0.apk**](https://github.com/pratyushkk/WordPilot
 
 ### Step 4: Prevent Background Service Termination
 To ensure the floating bubble remains available when typing:
-1. Go to **Settings** ➔ **Apps** ➔ **WordPilot** ➔ **Battery**.
+1. Go to **Settings** ➔ **Apps** ➔ **Hoverpen** ➔ **Battery**.
 2. Select **"Unrestricted"**.
 
 ---
@@ -132,8 +132,8 @@ To compile and package the release APK locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/pratyushkk/WordPilot.git
-cd WordPilot
+git clone https://github.com/pratyushkk/Hoverpen.git
+cd Hoverpen
 
 # Execute unit test suite (155 tests)
 ./gradlew testReleaseUnitTest
@@ -149,5 +149,5 @@ The compiled release APK will be located at:
 
 ## 📄 License
 
-WordPilot is open-source software licensed under the [Apache License, Version 2.0](LICENSE).
+Hoverpen is open-source software licensed under the [Apache License, Version 2.0](LICENSE).
 Built exclusively with permissive, open-source dependencies.

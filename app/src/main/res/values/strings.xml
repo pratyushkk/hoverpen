@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WordPilot AI</string>
-    <string name="accessibility_service_name">WordPilot Floating Assistant</string>
+    <string name="app_name">Hoverpen</string>
+    <string name="accessibility_service_name">Hoverpen Floating Assistant</string>
     <string name="accessibility_service_description">Provides real-time grammar and spelling suggestions across all apps with any keyboard</string>
-    <string name="tile_name">WordPilot Assistant</string>
-    <string name="widget_name">WordPilot Toggle</string>
-    <string name="widget_description">1-Tap Home Screen toggle to turn WordPilot Floating Assistant on or off</string>
+    <string name="tile_name">Hoverpen Assistant</string>
+    <string name="widget_name">Hoverpen Toggle</string>
+    <string name="widget_description">1-Tap Home Screen toggle to turn Hoverpen Floating Assistant on or off</string>
     
     <!-- Home -->
-    <string name="home_title">WordPilot</string>
+    <string name="home_title">Hoverpen</string>
     <string name="home_subtitle">Your Writing Assistant</string>
     <string name="home_editor_card_title">Writing Editor</string>
     <string name="home_editor_card_desc">Write, paste, and correct text</string>
@@ -77,7 +77,7 @@
     <string name="settings_about">About</string>
     <string name="settings_version">Version</string>
     <string name="settings_privacy_info">Privacy Information</string>
-    <string name="settings_privacy_detail">WordPilot processes all text locally on your device. No text is transmitted to external servers. The optional AI model runs entirely on-device.</string>
+    <string name="settings_privacy_detail">Hoverpen processes all text locally on your device. No text is transmitted to external servers. The optional AI model runs entirely on-device.</string>
     
     <!-- Dictionary -->
     <string name="dictionary_title">Personal Dictionary</string>

@@ -116,14 +116,14 @@ fun HomeScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_wordpilot_logo),
-                            contentDescription = "WordPilot Logo",
+                            contentDescription = "Hoverpen Logo",
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(10.dp))
                         )
                         Column {
                             Text(
-                                "WordPilot",
+                                "Hoverpen",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -221,7 +221,7 @@ fun HomeScreen(
                                     serviceInstance?.setAssistantPaused(newPaused)
                                     Toast.makeText(
                                         context,
-                                        if (newPaused) "WordPilot paused across apps" else "WordPilot resumed & active",
+                                        if (newPaused) "Hoverpen paused across apps" else "Hoverpen resumed & active",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 },
@@ -258,9 +258,9 @@ fun HomeScreen(
 
                     Text(
                         text = if (!isServiceActive) {
-                            "Enable WordPilot in Accessibility Settings to monitor your writing and floating suggestions across all compatible apps."
+                            "Enable Hoverpen in Accessibility Settings to monitor your writing and floating suggestions across all compatible apps."
                         } else if (isPaused) {
-                            "WordPilot is temporarily paused. Tap 'Resume' above or via the Quick Settings tile to restore floating suggestions."
+                            "Hoverpen is temporarily paused. Tap 'Resume' above or via the Quick Settings tile to restore floating suggestions."
                         } else {
                             "Floating assistant is actively monitoring text inputs in WhatsApp, Notes, Instagram, Gmail, and Chrome with automatic banking shield."
                         },
@@ -617,7 +617,7 @@ fun HomeScreen(
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
-                        "WordPilot uses lightweight external APIs with automatic failover. 50+ banking and payment apps are automatically shielded for privacy.",
+                        "Hoverpen uses lightweight external APIs with automatic failover. 50+ banking and payment apps are automatically shielded for privacy.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -917,7 +917,7 @@ fun AccessibilityGuideDialog(
 
                         GuideStepItem(number = "1", text = "Tap the 'Open Accessibility Settings' button below.")
                         GuideStepItem(number = "2", text = "Scroll to 'Downloaded apps' (or 'Installed services').")
-                        GuideStepItem(number = "3", text = "Select 'WordPilot Assistant', turn the toggle ON, and tap 'Allow'.")
+                        GuideStepItem(number = "3", text = "Select 'Hoverpen Assistant', turn the toggle ON, and tap 'Allow'.")
 
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -939,7 +939,7 @@ fun AccessibilityGuideDialog(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    "If Android shows 'Restricted setting': Go to Phone Settings ➔ Apps ➔ WordPilot ➔ 3 dots (top right) ➔ tap 'Allow restricted settings', then turn on accessibility.",
+                                    "If Android shows 'Restricted setting': Go to Phone Settings ➔ Apps ➔ Hoverpen ➔ 3 dots (top right) ➔ tap 'Allow restricted settings', then turn on accessibility.",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     lineHeight = 15.sp
@@ -967,7 +967,7 @@ fun AccessibilityGuideDialog(
                         badge = "Privacy Shield"
                     ) {
                         Text(
-                            "WordPilot is built with bank-grade privacy protection:",
+                            "Hoverpen is built with bank-grade privacy protection:",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -979,15 +979,15 @@ fun AccessibilityGuideDialog(
                         )
                         GuideStepItem(
                             number = "⚡",
-                            text = "Auto-Resume: When you exit the banking app and return to any regular app (WhatsApp, Chrome, Notes, Gmail) or tap an editable text field, WordPilot detects the safe context and resumes automatically!"
+                            text = "Auto-Resume: When you exit the banking app and return to any regular app (WhatsApp, Chrome, Notes, Gmail) or tap an editable text field, Hoverpen detects the safe context and resumes automatically!"
                         )
                         GuideStepItem(
                             number = "🎛️",
-                            text = "Quick Settings Tile: Swipe down your Android notification panel and tap the 'WordPilot' tile anytime to toggle or resume instantly."
+                            text = "Quick Settings Tile: Swipe down your Android notification panel and tap the 'Hoverpen' tile anytime to toggle or resume instantly."
                         )
                         GuideStepItem(
                             number = "📱",
-                            text = "Home Screen Widget: Add WordPilot's 1-tap widget to your home screen for quick single-touch resumption."
+                            text = "Home Screen Widget: Add Hoverpen's 1-tap widget to your home screen for quick single-touch resumption."
                         )
                     }
 
@@ -1004,7 +1004,7 @@ fun AccessibilityGuideDialog(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            "To ensure WordPilot is always available when typing, set its Battery Usage to 'Unrestricted' in App Info.",
+                            "To ensure Hoverpen is always available when typing, set its Battery Usage to 'Unrestricted' in App Info.",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium
                         )

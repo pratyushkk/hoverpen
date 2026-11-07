@@ -340,7 +340,7 @@ fun ModelManagementScreen(
                         )
                     }
                     Text(
-                        "WordPilot never transmits your keystrokes to third-party servers. " +
+                        "Hoverpen never transmits your keystrokes to third-party servers. " +
                         "Basic spelling and grammar rules execute instantly in milliseconds using deterministic trie tables. " +
                         "When Llama 3.2 is installed, intelligent tone adjustments and sentence rewrites run directly on your phone's processor.",
                         style = MaterialTheme.typography.bodySmall,

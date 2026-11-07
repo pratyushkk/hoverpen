@@ -34,7 +34,7 @@ class WordPilotTileService : TileService() {
             val success = setAccessibilityServiceEnabledDirectly(newState)
             if (success) {
                 updateTileState(isActive = newState)
-                val msg = if (newState) "WordPilot Active — Ready when typing" else "WordPilot Paused"
+                val msg = if (newState) "Hoverpen Active — Ready when typing" else "Hoverpen Paused"
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 com.wordpilot.assistant.widget.WordPilotWidgetProvider.updateAllWidgets(this, newState)
                 return
@@ -46,7 +46,7 @@ class WordPilotTileService : TileService() {
             WordPilotAccessibilityService.instance?.disableSelf()
             updateTileState(isActive = false)
             com.wordpilot.assistant.widget.WordPilotWidgetProvider.updateAllWidgets(this, false)
-            Toast.makeText(this, "WordPilot Paused for Banking", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Hoverpen Paused for Banking", Toast.LENGTH_SHORT).show()
         } else {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -107,7 +107,7 @@ class WordPilotTileService : TileService() {
     private fun updateTileState(isActive: Boolean = WordPilotAccessibilityService.instance != null) {
         val tile = qsTile ?: return
         tile.state = if (isActive) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-        tile.label = if (isActive) "WordPilot Active" else "WordPilot Paused"
+        tile.label = if (isActive) "Hoverpen Active" else "Hoverpen Paused"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             tile.subtitle = if (isActive) "Tap to pause for banking" else "Tap to enable"
         }

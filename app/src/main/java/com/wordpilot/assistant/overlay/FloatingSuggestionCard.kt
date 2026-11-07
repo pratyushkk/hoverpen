@@ -109,7 +109,7 @@ fun FloatingSuggestionCard(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_wordpilot_logo),
-                        contentDescription = "WordPilot",
+                        contentDescription = "Hoverpen",
                         modifier = Modifier
                             .size((customBubbleSizeDp * 0.7f).dp)
                             .clip(CircleShape)

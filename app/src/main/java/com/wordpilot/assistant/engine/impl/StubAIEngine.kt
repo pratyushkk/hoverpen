@@ -19,7 +19,7 @@ class StubAIEngine : LocalAIEngine {
     override val isModelInstalled: Boolean = false
 
     override val modelInfo: ModelInfo = ModelInfo(
-        name = "WordPilot AI (Not configured)",
+        name = "Hoverpen AI (Not configured)",
         source = "No model configured",
         license = "N/A",
         downloadSizeMb = 0,

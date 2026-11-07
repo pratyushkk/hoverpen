@@ -653,7 +653,7 @@ fun AppearanceSettingsScreen(
                             color = Color.White
                         )
                         Text(
-                            text = "The glowing symbol representing WordPilot AI in the bubble and editing bar.",
+                            text = "The glowing symbol representing Hoverpen AI in the bubble and editing bar.",
                             fontSize = 11.5.sp,
                             color = Color(0xFF94A3B8)
                         )

@@ -249,7 +249,7 @@ fun FloatingBubble(
                         else -> {
                             Icon(
                                 imageVector = settings.getAiLogo().icon,
-                                contentDescription = if (isExpanded) "WordPilot AI Anchor (Collapse)" else "WordPilot Assistant",
+                                contentDescription = if (isExpanded) "Hoverpen AI Anchor (Collapse)" else "Hoverpen Assistant",
                                 tint = Color.White.copy(alpha = effectiveIconAlpha),
                                 modifier = Modifier.size(animatedIconSizeDp)
                             )

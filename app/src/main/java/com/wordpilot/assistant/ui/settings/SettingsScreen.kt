@@ -58,7 +58,7 @@ fun SettingsScreen(
             title = { Text("Privacy & Security Information") },
             text = {
                 Text(
-                    "WordPilot is engineered with strict user privacy in mind:\n\n" +
+                    "Hoverpen is engineered with strict user privacy in mind:\n\n" +
                     "• Grammar checking is handled exclusively by your configured APIs (Sapling AI, LanguageTool)\n" +
                     "• Over 50+ banking, wallet, and UPI applications are strictly shielded and never inspected\n" +
                     "• Sensitive fields such as passwords and PINs are completely ignored\n" +
@@ -273,7 +273,7 @@ fun SettingsScreen(
             SettingsSection(title = "About & Privacy") {
                 SettingsClickable(
                     title = "Privacy Policy & Details",
-                    subtitle = "How WordPilot protects your privacy and text",
+                    subtitle = "How Hoverpen protects your privacy and text",
                     onClick = { showPrivacyDialog = true }
                 )
                 SettingsInfo(
@@ -281,7 +281,7 @@ fun SettingsScreen(
                     value = "2.0.0 (API Architecture)"
                 )
                 SettingsInfo(
-                    title = "WordPilot",
+                    title = "Hoverpen",
                     value = "Production Grammar & Writing Assistant"
                 )
             }

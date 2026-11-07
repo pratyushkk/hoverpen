@@ -477,7 +477,7 @@ fun ApiSettingsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "WordPilot checks grammar using your primary provider first. If it reaches quota or is unreachable, it automatically falls back seamlessly with zero interruption.",
+                        text = "Hoverpen checks grammar using your primary provider first. If it reaches quota or is unreachable, it automatically falls back seamlessly with zero interruption.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

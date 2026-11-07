@@ -45,7 +45,7 @@ class WordPilotWidgetProvider : AppWidgetProvider() {
             val success = setAccessibilityServiceEnabledDirectly(context, newState)
             if (success) {
                 updateAllWidgets(context, isActiveOverride = newState)
-                val msg = if (newState) "WordPilot Active — Ready when typing" else "WordPilot Paused"
+                val msg = if (newState) "Hoverpen Active — Ready when typing" else "Hoverpen Paused"
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -66,13 +66,13 @@ class WordPilotWidgetProvider : AppWidgetProvider() {
         if (isCurrentlyActive) {
             WordPilotAccessibilityService.instance?.disableSelf()
             updateAllWidgets(context, isActiveOverride = false)
-            Toast.makeText(context, "WordPilot Paused for Banking", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Hoverpen Paused for Banking", Toast.LENGTH_SHORT).show()
         } else {
             val settingsIntent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             context.startActivity(settingsIntent)
-            Toast.makeText(context, "Enable WordPilot in Accessibility Settings", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Enable Hoverpen in Accessibility Settings", Toast.LENGTH_LONG).show()
         }
     }
 

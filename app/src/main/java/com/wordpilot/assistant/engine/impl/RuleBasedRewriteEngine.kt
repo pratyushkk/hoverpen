@@ -19,9 +19,9 @@ class RuleBasedRewriteEngine(
     override val isModelInstalled: Boolean = true
 
     override val modelInfo: ModelInfo = ModelInfo(
-        name = "WordPilot Offline Engine",
+        name = "Hoverpen Offline Engine",
         source = "Built-in Rule Engine",
-        license = "WordPilot",
+        license = "Hoverpen",
         downloadSizeMb = 0,
         installedSizeMb = 0,
         isInstalled = true

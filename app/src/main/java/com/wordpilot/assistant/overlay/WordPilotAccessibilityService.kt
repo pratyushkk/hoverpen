@@ -258,7 +258,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
             floatingController?.clearCorrection()
 
             if (isAutoPauseBankingEnabled) {
-                Toast.makeText(this, "WordPilot paused for banking app. Tap Quick Tile to re-enable.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Hoverpen paused for banking app. Tap Quick Tile to re-enable.", Toast.LENGTH_LONG).show()
                 disableSelf()
             }
             return
@@ -376,7 +376,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
             controller.clearCorrection()
 
             if (isAutoPauseBankingEnabled) {
-                Toast.makeText(this, "WordPilot paused for banking app. Tap Quick Tile to re-enable.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Hoverpen paused for banking app. Tap Quick Tile to re-enable.", Toast.LENGTH_LONG).show()
                 disableSelf()
             }
             return
@@ -666,7 +666,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 TextOperationResult.Success
             } else {
                 val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("WordPilot Text", fullText))
+                cm.setPrimaryClip(ClipData.newPlainText("Hoverpen Text", fullText))
                 TextOperationResult.Failure("Field does not support direct replacement. Text copied to clipboard.")
             }
         } catch (e: Exception) {
@@ -727,7 +727,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 TextOperationResult.Success
             } else {
                 val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("WordPilot Text", newSentence))
+                cm.setPrimaryClip(ClipData.newPlainText("Hoverpen Text", newSentence))
                 TextOperationResult.Failure("Field does not support direct replacement. Text copied to clipboard.")
             }
         } catch (e: Exception) {
@@ -804,7 +804,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
                 TextOperationResult.Success
             } else {
                 val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("WordPilot Text", textToInsert))
+                cm.setPrimaryClip(ClipData.newPlainText("Hoverpen Text", textToInsert))
                 TextOperationResult.Failure("Field does not support direct insertion. Text copied to clipboard.")
             }
         } catch (e: Exception) {

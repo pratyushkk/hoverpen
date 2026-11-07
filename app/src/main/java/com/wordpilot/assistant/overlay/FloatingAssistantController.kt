@@ -719,12 +719,12 @@ class FloatingAssistantController(
                     Toast.makeText(context, "Applied", Toast.LENGTH_SHORT).show()
                 }
                 else -> {
-                    clipboardManager.setPrimaryClip(ClipData.newPlainText("WordPilot", text))
+                    clipboardManager.setPrimaryClip(ClipData.newPlainText("Hoverpen", text))
                     Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
-            clipboardManager.setPrimaryClip(ClipData.newPlainText("WordPilot", text))
+            clipboardManager.setPrimaryClip(ClipData.newPlainText("Hoverpen", text))
             Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
         }
     }
@@ -758,7 +758,7 @@ class FloatingAssistantController(
     fun copyPreviewText() {
         val textToCopy = _previewImprovedText.value.ifBlank { _previewOriginalText.value }
         if (textToCopy.isNotBlank()) {
-            val clip = ClipData.newPlainText("WordPilot Text", textToCopy)
+            val clip = ClipData.newPlainText("Hoverpen Text", textToCopy)
             clipboardManager.setPrimaryClip(clip)
             Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
         }

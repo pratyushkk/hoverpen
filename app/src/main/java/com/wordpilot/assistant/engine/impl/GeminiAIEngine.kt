@@ -379,7 +379,7 @@ class GeminiAIEngine(
         }
 
         return """
-            You are WordPilot, a premier mobile writing assistant.
+            You are Hoverpen, a premier mobile writing assistant.
             Instruction: $instruction
             
             Original Text:
