@@ -36,7 +36,7 @@ class AiFeatureDeviceTestReceiver : BroadcastReceiver() {
                 val reportBuilder = StringBuilder()
 
                 reportBuilder.append("=====================================================\n")
-                reportBuilder.append("       WORDPILOT V2 ON-DEVICE AI TEST REPORT         \n")
+                reportBuilder.append("       HOVERPEN V2 ON-DEVICE AI TEST REPORT         \n")
                 reportBuilder.append("=====================================================\n")
                 reportBuilder.append("Timestamp: ${Instant.now()}\n")
 

@@ -115,7 +115,7 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_wordpilot_logo),
+                            painter = painterResource(id = R.drawable.ic_hoverpen_logo),
                             contentDescription = "Hoverpen Logo",
                             modifier = Modifier
                                 .size(40.dp)

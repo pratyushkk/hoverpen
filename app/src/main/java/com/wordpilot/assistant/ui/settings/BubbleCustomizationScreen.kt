@@ -462,7 +462,7 @@ fun MinimizedBubblePreview(sizeDp: Float) {
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_wordpilot_logo),
+                    painter = painterResource(id = R.drawable.ic_hoverpen_logo),
                     contentDescription = null,
                     modifier = Modifier
                         .size((sizeDp * 0.7f).dp)

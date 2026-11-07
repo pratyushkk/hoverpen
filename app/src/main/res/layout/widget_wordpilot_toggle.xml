@@ -21,7 +21,7 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:contentDescription="@string/tile_name"
-            android:src="@drawable/ic_quick_tile_wordpilot" />
+            android:src="@drawable/ic_quick_tile_hoverpen" />
 
         <!-- Status Dot Indicator (Active green / Inactive slate) -->
         <ImageView

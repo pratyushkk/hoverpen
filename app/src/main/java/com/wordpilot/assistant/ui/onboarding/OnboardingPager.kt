@@ -112,7 +112,7 @@ fun OnboardingPagerScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_wordpilot_logo),
+                        painter = painterResource(id = R.drawable.ic_hoverpen_logo),
                         contentDescription = "Hoverpen Logo",
                         modifier = Modifier
                             .size(36.dp)

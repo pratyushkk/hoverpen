@@ -1,11 +1,11 @@
 # Hoverpen — System-Wide Android AI Writing Assistant
 
-[![Release v2.0](https://img.shields.io/badge/Release-v2.0%20(Latest)-emerald?style=for-the-badge&logo=android)](https://github.com/pratyushkk/Hoverpen/releases/tag/v2.0)
-[![Release v1.0](https://img.shields.io/badge/Release-v1.0%20(Legacy)-blue?style=for-the-badge&logo=android)](https://github.com/pratyushkk/Hoverpen/releases/tag/v1.0)
-[![Website](https://img.shields.io/badge/Website-pratyushkk.github.io%2FHoverpen-teal?style=for-the-badge&logo=googlechrome)](https://pratyushkk.github.io/Hoverpen/)
+[![Release v2.0](https://img.shields.io/badge/Release-v2.0%20(Latest)-emerald?style=for-the-badge&logo=android)](https://github.com/pratyushkk/hoverpen/releases/tag/v2.0)
+[![Release v1.0](https://img.shields.io/badge/Release-v1.0%20(Legacy)-blue?style=for-the-badge&logo=android)](https://github.com/pratyushkk/hoverpen/releases/tag/v1.0)
+[![Website](https://img.shields.io/badge/Website-pratyushkk.github.io%2Fhoverpen-teal?style=for-the-badge&logo=googlechrome)](https://pratyushkk.github.io/hoverpen/)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026--35)-blue?style=for-the-badge&logo=android)](https://developer.android.com)
 [![Architecture](https://img.shields.io/badge/Architecture-Kotlin%20%7C%20Compose%20%7C%20MVVM-purple?style=for-the-badge&logo=kotlin)](https://kotlinlang.org)
-[![Privacy](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%7C%20Banking%20Shield-green?style=for-the-badge&logo=shield)](https://github.com/pratyushkk/Hoverpen)
+[![Privacy](https://img.shields.io/badge/Privacy-Zero%20Telemetry%20%7C%20Banking%20Shield-green?style=for-the-badge&logo=shield)](https://github.com/pratyushkk/hoverpen)
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange?style=for-the-badge)](LICENSE)
 
 Hoverpen is a production-grade, privacy-first Android writing assistant engineered to provide seamless, real-time grammar, spelling, and tone corrections across third-party applications. Featuring a non-intrusive floating overlay, sequential 3-tier AI failover, frosted glass aesthetics, and automated privacy shields, Hoverpen elevates writing quality across any messaging, email, document, or social media app.
@@ -17,8 +17,8 @@ Hoverpen is a production-grade, privacy-first Android writing assistant engineer
 Choose between the latest feature-packed **Hoverpen v2.0** or the legacy stable **Hoverpen v1.0**:
 
 ### 🌟 Hoverpen v2.0 (Latest Recommended Release)
-* **Direct APK Download**: [**Hoverpen-v2.0.apk**](https://github.com/pratyushkk/Hoverpen/releases/download/v2.0/Hoverpen-v2.0.apk) `(12.9 MB)`
-* **GitHub Release Page**: [**Hoverpen v2.0 Release Assets & Changelog**](https://github.com/pratyushkk/Hoverpen/releases/tag/v2.0)
+* **Direct APK Download**: [**Hoverpen-v2.0.apk**](https://github.com/pratyushkk/hoverpen/releases/download/v2.0/Hoverpen-v2.0.apk) `(12.9 MB)`
+* **GitHub Release Page**: [**Hoverpen v2.0 Release Assets & Changelog**](https://github.com/pratyushkk/hoverpen/releases/tag/v2.0)
 * **What's New in v2.0**:
   * ✨ **Gemini Core AI Model**: Google Gemini 2.5 Flash powers instant text restructuring and tone transforms.
   * 🎛️ **Dedicated `✨ AI` Expander Window**: Clean one-touch AI trigger button in the floating pill.
@@ -31,8 +31,8 @@ Choose between the latest feature-packed **Hoverpen v2.0** or the legacy stable 
 ---
 
 ### 📦 Hoverpen v1.0 (Stable Legacy Release)
-* **Direct APK Download**: [**Hoverpen-v1.0.apk**](https://github.com/pratyushkk/Hoverpen/releases/download/v1.0/Hoverpen-v1.0.apk) `(12.3 MB)`
-* **GitHub Release Page**: [**Hoverpen v1.0 Release Assets & Changelog**](https://github.com/pratyushkk/Hoverpen/releases/tag/v1.0)
+* **Direct APK Download**: [**WordPilot-v1.0.apk**](https://github.com/pratyushkk/hoverpen/releases/download/v1.0/WordPilot-v1.0.apk) `(12.3 MB)`
+* **GitHub Release Page**: [**WordPilot v1.0 Release Assets & Changelog**](https://github.com/pratyushkk/hoverpen/releases/tag/v1.0)
 * **Core v1.0 Highlights**:
   * Original floating bubble overlay with 1-tap word replacement chips.
   * Dual-provider failover: Sapling AI (Primary) + LanguageTool (Fallback).
@@ -132,8 +132,8 @@ To compile and package the release APK locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/pratyushkk/Hoverpen.git
-cd Hoverpen
+git clone https://github.com/pratyushkk/hoverpen.git
+cd hoverpen
 
 # Execute unit test suite (155 tests)
 ./gradlew testReleaseUnitTest

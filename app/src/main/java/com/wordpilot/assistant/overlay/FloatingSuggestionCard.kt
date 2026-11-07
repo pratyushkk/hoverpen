@@ -108,7 +108,7 @@ fun FloatingSuggestionCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_wordpilot_logo),
+                        painter = painterResource(id = R.drawable.ic_hoverpen_logo),
                         contentDescription = "Hoverpen",
                         modifier = Modifier
                             .size((customBubbleSizeDp * 0.7f).dp)

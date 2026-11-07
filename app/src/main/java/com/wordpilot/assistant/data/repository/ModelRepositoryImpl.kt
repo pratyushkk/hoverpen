@@ -118,7 +118,7 @@ class ModelRepositoryImpl(private val modelDir: File) {
                 connection.instanceFollowRedirects = true
                 connection.connectTimeout = 30_000
                 connection.readTimeout = 60_000
-                connection.setRequestProperty("User-Agent", "WordPilot-Android")
+                connection.setRequestProperty("User-Agent", "Hoverpen-Android")
 
                 val status = connection.responseCode
                 if (status == HttpURLConnection.HTTP_MOVED_PERM ||

@@ -202,7 +202,7 @@ class EnglishDictionary(
             "very", "even", "back", "there", "down", "still", "in", "as", "too", "when", "never",
             "really", "most", "on", "why", "about", "over", "again", "where", "right", "off", "always",
             "today", "tomorrow", "yesterday", "tonight", "often", "sometimes", "usually", "quickly", "slowly",
-            "assistant", "wordpilot", "hello", "writing", "think", "market", "phone", "motorola", "apple", "apples", "orange"
+            "assistant", "hoverpen", "wordpilot", "hello", "writing", "think", "market", "phone", "motorola", "apple", "apples", "orange"
         )
         coreWords.forEach { word ->
             val tags = inferTagsForWord(word)
