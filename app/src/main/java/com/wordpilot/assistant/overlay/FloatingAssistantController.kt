@@ -534,6 +534,13 @@ class FloatingAssistantController(
         cachedTextCorrections = null
     }
 
+    fun clearTextContext() {
+        _currentFullText.value = ""
+        _currentSentence.value = ""
+        lastValidTargetText = ""
+        clearCorrection()
+    }
+
     fun dismiss() {
         clearCorrection()
         setUiState(FloatingUiState.COLLAPSED)
@@ -886,6 +893,10 @@ class FloatingAssistantController(
         if (direct.isNotBlank()) {
             lastValidTargetText = direct
             return direct
+        }
+        // If attached to an active input field and the field is empty, do not fallback to stale text or clipboard
+        if (onApplySentenceCallback != null || onApplyFullTextCallback != null) {
+            return ""
         }
         if (lastValidTargetText.isNotBlank()) {
             return lastValidTargetText

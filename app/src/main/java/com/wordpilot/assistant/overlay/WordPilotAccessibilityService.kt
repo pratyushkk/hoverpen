@@ -5,7 +5,9 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
@@ -321,7 +323,8 @@ class WordPilotAccessibilityService : AccessibilityService(),
 
             val text = extractNodeText(node)
             if (text.isBlank()) {
-                controller.clearCorrection()
+                controller.clearTextContext()
+                lastAnalyzedText = ""
                 return
             }
 
@@ -505,17 +508,71 @@ class WordPilotAccessibilityService : AccessibilityService(),
     }
 
     private fun extractNodeText(node: AccessibilityNodeInfo): String {
-        node.text?.let { if (it.isNotEmpty()) return it.toString() }
-        if (!node.contentDescription.isNullOrEmpty()) {
-            return node.contentDescription.toString()
+        // 1. Check native API 26+ isShowingHintText flag: if true, text is purely placeholder
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && node.isShowingHintText) {
+            return ""
         }
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i) ?: continue
-            val childText = child.text?.toString()
-            if (!childText.isNullOrEmpty()) {
-                return childText
+
+        // 2. Compatibility check via AccessibilityNodeInfoCompat
+        val compat = AccessibilityNodeInfoCompat.wrap(node)
+        if (compat.isShowingHintText) {
+            return ""
+        }
+
+        // 3. Extract hint/placeholder text from node or compat
+        val hintText = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            node.hintText?.toString()
+        } else {
+            compat.hintText?.toString()
+        }) ?: compat.extras?.getCharSequence("androidx.view.accessibility.AccessibilityNodeInfoCompat.HINT_TEXT_KEY")?.toString()
+
+        val rawText = node.text?.toString()
+
+        // 4. If rawText matches hintText exactly, it is placeholder text (user has not typed anything)
+        if (!rawText.isNullOrEmpty() && !hintText.isNullOrEmpty()) {
+            if (rawText.trim().equals(hintText.trim(), ignoreCase = true)) {
+                return ""
             }
         }
+
+        // 5. If rawText is not empty and not placeholder, this is user-entered text
+        if (!rawText.isNullOrEmpty()) {
+            return rawText
+        }
+
+        // 6. NEVER fallback to node.contentDescription for editable nodes!
+        // In Android, an empty EditText often populates contentDescription with "Search", "Type a message",
+        // or TalkBack instructions. It is NEVER the user's typed input.
+
+        // 7. For custom non-standard composite containers (where node itself isn't editable), inspect children
+        if (!node.isEditable) {
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && child.isShowingHintText) continue
+                    val childCompat = AccessibilityNodeInfoCompat.wrap(child)
+                    if (childCompat.isShowingHintText) continue
+
+                    val childHint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        child.hintText?.toString()
+                    } else {
+                        childCompat.hintText?.toString()
+                    }
+
+                    val childText = child.text?.toString()
+                    if (!childText.isNullOrEmpty()) {
+                        if (!childHint.isNullOrEmpty() && childText.trim().equals(childHint.trim(), ignoreCase = true)) {
+                            continue
+                        }
+                        if (!hintText.isNullOrEmpty() && childText.trim().equals(hintText.trim(), ignoreCase = true)) {
+                            continue
+                        }
+                        return childText
+                    }
+                } catch (_: IllegalStateException) {} catch (_: SecurityException) {}
+            }
+        }
+
         return ""
     }
 
