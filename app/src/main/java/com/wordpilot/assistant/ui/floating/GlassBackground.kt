@@ -81,6 +81,7 @@ fun GlassBackground(
             .then(shadowModifier)
             .then(bgModifier)
             .then(borderModifier)
+            .clip(shape)
     ) {
         // Subtle specular reflective highlight along the top edge
         if (highlightOpacity > 0f) {

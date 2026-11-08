@@ -332,7 +332,7 @@ fun FloatingAssistantView(
                                 .fillMaxHeight()
                                 .graphicsLayer { alpha = contentAlpha }
                                 .padding(start = 6.dp, end = 2.dp),
-                            contentAlignment = Alignment.CenterStart
+                            contentAlignment = Alignment.CenterEnd
                         ) {
                             ToolbarActionsContent(
                                 settings = settings,

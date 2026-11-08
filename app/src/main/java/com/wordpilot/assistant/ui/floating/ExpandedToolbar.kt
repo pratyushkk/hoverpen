@@ -97,6 +97,36 @@ fun ToolbarActionsContent(
                     modifier = Modifier.size(16.dp)
                 )
             }
+
+            // Dedicated AI Button in Expanded Pill
+            Surface(
+                onClick = { onActionClick("rewrite_tone") },
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF6366F1).copy(alpha = 0.32f),
+                border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.75f)),
+                modifier = Modifier
+                    .height(30.dp)
+                    .padding(horizontal = 2.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AutoAwesome,
+                        contentDescription = "AI",
+                        tint = Color(0xFFA5B4FC),
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = "AI",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
 
         if (correctionsToShow.isNotEmpty()) {
@@ -105,27 +135,57 @@ fun ToolbarActionsContent(
                 modifier = Modifier
                     .weight(1f)
                     .horizontalScroll(scrollState),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = if (isExpandedToLeft) {
+                    Arrangement.spacedBy(8.dp, Alignment.End)
+                } else {
+                    Arrangement.spacedBy(8.dp, Alignment.Start)
+                },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                correctionsToShow.forEachIndexed { index, correction ->
-                    StaggeredCorrectionChip(
-                        correction = correction,
-                        index = index,
-                        onAccept = { onAcceptCorrection(correction) }
-                    )
-                }
+                if (isExpandedToLeft) {
+                    IconButton(
+                        onClick = onDismissCorrection,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Dismiss error",
+                            tint = AssistantColors.TextMuted,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
 
-                IconButton(
-                    onClick = onDismissCorrection,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Dismiss error",
-                        tint = AssistantColors.TextMuted,
-                        modifier = Modifier.size(13.dp)
-                    )
+                    correctionsToShow.forEachIndexed { index, correction ->
+                        StaggeredCorrectionChip(
+                            correction = correction,
+                            index = index,
+                            totalCount = correctionsToShow.size,
+                            isExpandedToLeft = true,
+                            onAccept = { onAcceptCorrection(correction) }
+                        )
+                    }
+                } else {
+                    correctionsToShow.forEachIndexed { index, correction ->
+                        StaggeredCorrectionChip(
+                            correction = correction,
+                            index = index,
+                            totalCount = correctionsToShow.size,
+                            isExpandedToLeft = false,
+                            onAccept = { onAcceptCorrection(correction) }
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDismissCorrection,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Dismiss error",
+                            tint = AssistantColors.TextMuted,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
                 }
             }
         } else if (isChecking) {
@@ -134,18 +194,33 @@ fun ToolbarActionsContent(
                     .weight(1f)
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = if (isExpandedToLeft) Arrangement.End else Arrangement.Start
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(14.dp),
-                    strokeWidth = 2.dp,
-                    color = AssistantColors.AccentCyan
-                )
-                Text(
-                    text = "Checking...",
-                    color = Color.White.copy(alpha = 0.8f),
-                    fontSize = 13.sp
-                )
+                if (isExpandedToLeft) {
+                    Text(
+                        text = "Checking...",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = AssistantColors.AccentCyan
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = AssistantColors.AccentCyan
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Checking...",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 13.sp
+                    )
+                }
             }
         } else {
             Row(
@@ -154,54 +229,71 @@ fun ToolbarActionsContent(
                     .clickable { onCollapse() }
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = if (isExpandedToLeft) Arrangement.End else Arrangement.Start
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = Color(0xFF10B981),
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = "All clear",
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-
-        // Dedicated AI Button in Expanded Pill
-        Surface(
-            onClick = { onActionClick("rewrite_tone") },
-            shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF6366F1).copy(alpha = 0.32f),
-            border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.75f)),
-            modifier = Modifier
-                .height(30.dp)
-                .padding(horizontal = 2.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.AutoAwesome,
-                    contentDescription = "AI",
-                    tint = Color(0xFFA5B4FC),
-                    modifier = Modifier.size(13.dp)
-                )
-                Text(
-                    text = "AI",
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isExpandedToLeft) {
+                    Text(
+                        text = "All clear",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(16.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = Color(0xFF10B981),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "All clear",
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
         if (!isExpandedToLeft) {
+            // Dedicated AI Button in Expanded Pill
+            Surface(
+                onClick = { onActionClick("rewrite_tone") },
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF6366F1).copy(alpha = 0.32f),
+                border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.75f)),
+                modifier = Modifier
+                    .height(30.dp)
+                    .padding(horizontal = 2.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AutoAwesome,
+                        contentDescription = "AI",
+                        tint = Color(0xFFA5B4FC),
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = "AI",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             IconButton(
                 onClick = onCollapse,
                 modifier = Modifier.size(26.dp)
@@ -262,12 +354,20 @@ fun ExpandedToolbar(
 fun StaggeredCorrectionChip(
     correction: Correction,
     index: Int,
+    totalCount: Int = 1,
+    isExpandedToLeft: Boolean = false,
     onAccept: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isVisible by remember { mutableStateOf(false) }
+    val effectiveDelay = if (isExpandedToLeft) {
+        (totalCount - 1 - index).coerceAtLeast(0) * 35L
+    } else {
+        index * 35L
+    }
+
     LaunchedEffect(correction.id) {
-        delay(index * 35L)
+        delay(effectiveDelay)
         isVisible = true
     }
 
@@ -288,7 +388,9 @@ fun StaggeredCorrectionChip(
                 durationMillis = 240,
                 easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
             ),
-            initialOffsetX = { it / 3 }
+            initialOffsetX = { fullWidth ->
+                if (isExpandedToLeft) fullWidth / 2 else -fullWidth / 2
+            }
         ),
         exit = fadeOut(tween(100)) + shrinkHorizontally(tween(100)),
         modifier = modifier
