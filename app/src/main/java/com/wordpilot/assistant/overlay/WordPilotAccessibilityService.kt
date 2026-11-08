@@ -70,7 +70,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
         }
     }
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main + serviceExceptionHandler)
-    private val debouncer = Debouncer(serviceScope, 450L)
+    private val debouncer = Debouncer(serviceScope, 220L)
     private val safeReplacementHelper = SafeReplacementHelper()
 
     data class UndoRecord(
@@ -286,9 +286,18 @@ class WordPilotAccessibilityService : AccessibilityService(),
 
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED,
             AccessibilityEvent.TYPE_VIEW_FOCUSED,
-            AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED,
-            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
+            AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> {
                 handleTextInputEvent(event)
+            }
+
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
+                val changeTypes = event.contentChangeTypes
+                val isTextRelated = (changeTypes and AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT) != 0 ||
+                    (changeTypes and AccessibilityEvent.CONTENT_CHANGE_TYPE_CONTENT_DESCRIPTION) != 0 ||
+                    changeTypes == AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED
+                if (isTextRelated) {
+                    handleTextInputEvent(event)
+                }
             }
         }
     }
@@ -368,7 +377,8 @@ class WordPilotAccessibilityService : AccessibilityService(),
 
             if (text != lastAnalyzedText) {
                 Log.d(TAG, "Text changed in ${event.packageName} (len=${text.length})")
-                debouncer.debounce {
+                val isWordEnding = text.endsWith(" ") || text.endsWith(".") || text.endsWith(",") || text.endsWith("?") || text.endsWith("!")
+                debouncer.debounce(if (isWordEnding) 80L else 220L) {
                     analyzeText(text, node)
                 }
             }
@@ -507,69 +517,63 @@ class WordPilotAccessibilityService : AccessibilityService(),
         return null
     }
 
+    private fun isCommonPlaceholder(text: String): Boolean {
+        val trimmed = text.trim().lowercase()
+        return trimmed in listOf(
+            "message", "message...", "type a message", "type a message...",
+            "search", "search...", "send a message", "send a message...",
+            "add a comment", "add a comment...", "comment", "comment...",
+            "write a reply", "write a reply...", "reply", "reply...",
+            "write a message", "write a message..."
+        ) || trimmed.startsWith("message ") || trimmed.startsWith("type a message")
+    }
+
     private fun extractNodeText(node: AccessibilityNodeInfo): String {
-        // 1. Check native API 26+ isShowingHintText flag: if true, text is purely placeholder
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && node.isShowingHintText) {
-            return ""
-        }
-
-        // 2. Compatibility check via AccessibilityNodeInfoCompat
-        val compat = AccessibilityNodeInfoCompat.wrap(node)
-        if (compat.isShowingHintText) {
-            return ""
-        }
-
-        // 3. Extract hint/placeholder text from node or compat
         val hintText = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             node.hintText?.toString()
-        } else {
-            compat.hintText?.toString()
-        }) ?: compat.extras?.getCharSequence("androidx.view.accessibility.AccessibilityNodeInfoCompat.HINT_TEXT_KEY")?.toString()
+        } else null) ?: AccessibilityNodeInfoCompat.wrap(node).hintText?.toString()
 
         val rawText = node.text?.toString()
 
-        // 4. If rawText matches hintText exactly, it is placeholder text (user has not typed anything)
-        if (!rawText.isNullOrEmpty() && !hintText.isNullOrEmpty()) {
-            if (rawText.trim().equals(hintText.trim(), ignoreCase = true)) {
+        // 1. If rawText is present and non-empty
+        if (!rawText.isNullOrEmpty()) {
+            val matchesHint = !hintText.isNullOrEmpty() && rawText.trim().equals(hintText.trim(), ignoreCase = true)
+            val isHintFlagged = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && node.isShowingHintText) ||
+                AccessibilityNodeInfoCompat.wrap(node).isShowingHintText
+
+            // Only reject if rawText explicitly matches the hint text or is flagged as placeholder
+            if (matchesHint || (isHintFlagged && isCommonPlaceholder(rawText))) {
                 return ""
             }
-        }
-
-        // 5. If rawText is not empty and not placeholder, this is user-entered text
-        if (!rawText.isNullOrEmpty()) {
             return rawText
         }
 
-        // 6. NEVER fallback to node.contentDescription for editable nodes!
-        // In Android, an empty EditText often populates contentDescription with "Search", "Type a message",
-        // or TalkBack instructions. It is NEVER the user's typed input.
+        // 2. For composite containers or custom views (e.g. Instagram, WhatsApp), inspect children
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            try {
+                val childHint = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    child.hintText?.toString()
+                } else null) ?: AccessibilityNodeInfoCompat.wrap(child).hintText?.toString()
 
-        // 7. For custom non-standard composite containers (where node itself isn't editable), inspect children
-        if (!node.isEditable) {
-            for (i in 0 until node.childCount) {
-                val child = node.getChild(i) ?: continue
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && child.isShowingHintText) continue
-                    val childCompat = AccessibilityNodeInfoCompat.wrap(child)
-                    if (childCompat.isShowingHintText) continue
-
-                    val childHint = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        child.hintText?.toString()
-                    } else {
-                        childCompat.hintText?.toString()
+                val childText = child.text?.toString()
+                if (!childText.isNullOrEmpty()) {
+                    val matchesChildHint = !childHint.isNullOrEmpty() && childText.trim().equals(childHint.trim(), ignoreCase = true)
+                    val matchesParentHint = !hintText.isNullOrEmpty() && childText.trim().equals(hintText.trim(), ignoreCase = true)
+                    if (matchesChildHint || matchesParentHint || isCommonPlaceholder(childText)) {
+                        continue
                     }
+                    return childText
+                }
+            } catch (_: IllegalStateException) {} catch (_: SecurityException) {}
+        }
 
-                    val childText = child.text?.toString()
-                    if (!childText.isNullOrEmpty()) {
-                        if (!childHint.isNullOrEmpty() && childText.trim().equals(childHint.trim(), ignoreCase = true)) {
-                            continue
-                        }
-                        if (!hintText.isNullOrEmpty() && childText.trim().equals(hintText.trim(), ignoreCase = true)) {
-                            continue
-                        }
-                        return childText
-                    }
-                } catch (_: IllegalStateException) {} catch (_: SecurityException) {}
+        // 3. Fallback to contentDescription if rawText is empty, but protect against placeholders
+        val contentDesc = node.contentDescription?.toString()
+        if (!contentDesc.isNullOrEmpty()) {
+            val matchesHint = !hintText.isNullOrEmpty() && contentDesc.trim().equals(hintText.trim(), ignoreCase = true)
+            if (!matchesHint && !isCommonPlaceholder(contentDesc)) {
+                return contentDesc
             }
         }
 
@@ -578,10 +582,9 @@ class WordPilotAccessibilityService : AccessibilityService(),
 
     private suspend fun analyzeText(text: String, targetNode: AccessibilityNodeInfo) = withContext(Dispatchers.Default) {
         val app = WordPilotApp.instance
-        lastAnalyzedText = text
 
         try {
-            withContext(Dispatchers.Main) {
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
                 floatingController?.setChecking(true)
             }
 
@@ -612,6 +615,7 @@ class WordPilotAccessibilityService : AccessibilityService(),
             )
 
             withContext(Dispatchers.Main) {
+                lastAnalyzedText = text
                 val controller = floatingController
                 controller?.setChecking(false)
                 controller?.setCachedCorrections(text, sortedCorrections)
@@ -649,8 +653,10 @@ class WordPilotAccessibilityService : AccessibilityService(),
             Log.e(TAG, "Security exception analyzing text", e)
         } catch (e: IllegalStateException) {
             Log.w(TAG, "Node or state error analyzing text", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error analyzing text", e)
         } finally {
-            withContext(Dispatchers.Main) {
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
                 floatingController?.setChecking(false)
             }
         }

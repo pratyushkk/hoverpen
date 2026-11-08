@@ -9,8 +9,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
 /**
- * Coordinates grammar and spelling corrections through the multi-provider orchestrator.
- * All suggestions in production originate exclusively from configured cloud APIs (Sapling AI, LanguageTool).
+ * Coordinates grammar and spelling corrections through the multi-provider orchestrator
+ * with automatic failover to on-device offline spelling/grammar engine if cloud APIs fail.
  */
 class CorrectionCoordinator(
     val providerOrchestrator: ProviderOrchestrator? = null,
@@ -31,19 +31,31 @@ class CorrectionCoordinator(
 
     /**
      * Checks full text through the multi-provider orchestrator with automatic failover.
+     * If cloud providers fail or time out, seamlessly falls back to on-device offline analysis.
      */
     suspend fun checkText(text: String): List<Correction> = coroutineScope {
         if (text.isBlank()) return@coroutineScope emptyList()
 
         if (providerOrchestrator != null) {
             val result = providerOrchestrator.check(text)
-            if (result.success) {
+            if (result.success && result.corrections.isNotEmpty()) {
                 return@coroutineScope result.corrections
+            }
+            if (result.success && result.complete) {
+                return@coroutineScope emptyList()
+            }
+            // Cloud provider failed or was unavailable; fallback to offline engine
+            val fallback = runOfflineCheck(text)
+            if (fallback.isNotEmpty()) {
+                return@coroutineScope fallback
             }
             return@coroutineScope emptyList()
         }
 
-        // Test harness path when providerOrchestrator is not injected
+        runOfflineCheck(text)
+    }
+
+    private suspend fun runOfflineCheck(text: String): List<Correction> = coroutineScope {
         val baseCorrections = if (spellEngine is TrieSpellEngine) {
             spellEngine.facade.analyze(
                 rawText = text,
@@ -84,6 +96,15 @@ class CorrectionCoordinator(
             val result = providerOrchestrator.check(sentence)
             if (result.success) {
                 return result.corrections.map {
+                    it.copy(
+                        startOffset = (it.startOffset + sentenceStart).coerceAtMost(sentenceEnd),
+                        endOffset = (it.endOffset + sentenceStart).coerceAtMost(sentenceEnd)
+                    )
+                }
+            }
+            val fallback = runOfflineCheck(sentence)
+            if (fallback.isNotEmpty()) {
+                return fallback.map {
                     it.copy(
                         startOffset = (it.startOffset + sentenceStart).coerceAtMost(sentenceEnd),
                         endOffset = (it.endOffset + sentenceStart).coerceAtMost(sentenceEnd)

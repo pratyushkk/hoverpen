@@ -450,7 +450,7 @@ class FloatingAssistantController(
 
     fun checkTextNow() {
         val targetText = getTargetText()
-        if (targetText.isBlank() || _isChecking.value) return
+        if (targetText.isBlank()) return
         _isChecking.value = true
         controllerScope.launch {
             try {
@@ -465,22 +465,15 @@ class FloatingAssistantController(
                     } else false
                     !isIgnored && !inDict
                 }
-                _isChecking.value = false
                 _activeCorrectionsList.value = valid
                 _activeCorrection.value = valid.firstOrNull()
                 _errorCount.value = valid.size
             } catch (e: CancellationException) {
-                _isChecking.value = false
                 throw e
-            } catch (e: IOException) {
+            } catch (e: Exception) {
+                Log.w(TAG, "Error during grammar check", e)
+            } finally {
                 _isChecking.value = false
-                Log.w(TAG, "Network error during grammar check", e)
-            } catch (e: SecurityException) {
-                _isChecking.value = false
-                Log.e(TAG, "Permission denied during grammar check", e)
-            } catch (e: IllegalStateException) {
-                _isChecking.value = false
-                Log.w(TAG, "Engine not ready during grammar check", e)
             }
         }
     }

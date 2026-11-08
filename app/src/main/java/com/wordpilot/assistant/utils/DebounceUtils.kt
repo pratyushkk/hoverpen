@@ -7,14 +7,14 @@ import kotlinx.coroutines.launch
 
 class Debouncer(
     private val scope: CoroutineScope,
-    private val delayMs: Long = 300L
+    private val defaultDelayMs: Long = 300L
 ) {
     private var job: Job? = null
 
-    fun debounce(action: suspend () -> Unit) {
+    fun debounce(customDelayMs: Long? = null, action: suspend () -> Unit) {
         job?.cancel()
         job = scope.launch {
-            delay(delayMs)
+            delay(customDelayMs ?: defaultDelayMs)
             action()
         }
     }
