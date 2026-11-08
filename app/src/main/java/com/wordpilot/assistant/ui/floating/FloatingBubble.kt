@@ -9,11 +9,6 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -22,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,6 +54,7 @@ fun FloatingBubble(
     settings: AppearanceSettings,
     onClick: () -> Unit,
     onDrag: (Float, Float) -> Unit,
+    onDragStart: () -> Unit = {},
     onDragEnd: () -> Unit = {},
     onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -100,9 +97,9 @@ fun FloatingBubble(
 
     val animatedSizeDp by animateDpAsState(
         targetValue = targetSizeDp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
+        animationSpec = tween(
+            durationMillis = 240,
+            easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
         ),
         label = "bubbleAnchorSize"
     )
@@ -110,22 +107,11 @@ fun FloatingBubble(
     val targetIconSizeDp = if (isExpanded) 18.dp else settings.iconSizeDp.dp
     val animatedIconSizeDp by animateDpAsState(
         targetValue = targetIconSizeDp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMedium
+        animationSpec = tween(
+            durationMillis = 200,
+            easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
         ),
         label = "bubbleIconSize"
-    )
-
-    val infiniteTransition = rememberInfiniteTransition(label = "pulseRing")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.90f,
-        targetValue = 1.10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
     )
 
     val shape = settings.bubbleShape.toShape(
@@ -142,20 +128,25 @@ fun FloatingBubble(
     val gradient = settings.getEffectiveGradient()
 
     val view = androidx.compose.ui.platform.LocalView.current
+    var isDragging by remember { mutableStateOf(false) }
 
     val gestureModifier = if (!isExpanded) {
         Modifier.pointerInput(Unit) {
             detectDragGestures(
                 onDragStart = {
+                    isDragging = true
                     lastInteractionTimestamp = System.currentTimeMillis()
                     isDimmed = false
+                    onDragStart()
                 },
                 onDragEnd = {
+                    isDragging = false
                     lastInteractionTimestamp = System.currentTimeMillis()
                     try { view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK) } catch (_: SecurityException) {} catch (_: IllegalStateException) {}
                     onDragEnd()
                 },
                 onDragCancel = {
+                    isDragging = false
                     lastInteractionTimestamp = System.currentTimeMillis()
                     onDragEnd()
                 },
@@ -174,7 +165,11 @@ fun FloatingBubble(
     Box(
         modifier = modifier
             .size(animatedSizeDp)
-            .scale(if (isChecking) pulseScale else 1f)
+            .graphicsLayer {
+                val scale = if (isDragging) 1.05f else 1.0f
+                scaleX = scale
+                scaleY = scale
+            }
             .then(gestureModifier)
             .pointerInput(isExpanded) {
                 detectTapGestures(

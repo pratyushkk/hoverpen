@@ -40,6 +40,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.wordpilot.assistant.R
 import com.wordpilot.assistant.overlay.WordPilotAccessibilityService
 
@@ -57,6 +59,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var resumeSignal by remember { mutableIntStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -375,20 +378,68 @@ fun HomeScreen(
                             actionLabel = if (isBatteryOptimized) "Protected" else "Fix",
                             onClick = {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    try {
-                                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                            data = Uri.parse("package:${context.packageName}")
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        }
-                                        context.startActivity(intent)
-                                    } catch (e: android.content.ActivityNotFoundException) {
+                                    val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                                    val isAlreadyIgnored = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+
+                                    if (isAlreadyIgnored) {
                                         try {
-                                            val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                                            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
                                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                             }
-                                            context.startActivity(fallbackIntent)
-                                        } catch (_: android.content.ActivityNotFoundException) {} catch (_: SecurityException) {}
-                                    } catch (e: SecurityException) {}
+                                            context.startActivity(intent)
+                                        } catch (_: Exception) {
+                                            try {
+                                                val appSettingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                                    data = Uri.parse("package:${context.packageName}")
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(appSettingsIntent)
+                                            } catch (_: Exception) {}
+                                        }
+                                    } else {
+                                        var launched = false
+                                        try {
+                                            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                                data = Uri.parse("package:${context.packageName}")
+                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                            }
+                                            context.startActivity(intent)
+                                            launched = true
+                                        } catch (e: Exception) {
+                                            android.util.Log.w("Hoverpen", "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS failed, trying fallback", e)
+                                        }
+
+                                        if (!launched) {
+                                            try {
+                                                val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(fallbackIntent)
+                                                launched = true
+                                            } catch (e: Exception) {
+                                                android.util.Log.w("Hoverpen", "ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS failed", e)
+                                            }
+                                        }
+
+                                        if (!launched) {
+                                            try {
+                                                val appSettingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                                    data = Uri.parse("package:${context.packageName}")
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(appSettingsIntent)
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("Hoverpen", "App settings fallback failed", e)
+                                            }
+                                        }
+
+                                        coroutineScope.launch {
+                                            delay(1000)
+                                            resumeSignal++
+                                            delay(2000)
+                                            resumeSignal++
+                                        }
+                                    }
                                 }
                             }
                         )

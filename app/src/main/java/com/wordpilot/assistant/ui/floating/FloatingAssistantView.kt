@@ -73,6 +73,7 @@ fun FloatingAssistantView(
         canUndo = canUndo,
         currentTone = currentTone,
         onBubbleClick = { onEvent(FloatingEvent.OnBubbleClick) },
+        onDragStart = { onEvent(FloatingEvent.OnDragStart) },
         onDrag = { dx, dy -> onEvent(FloatingEvent.OnDrag(dx, dy)) },
         onDragEnd = { onEvent(FloatingEvent.OnDragEnd) },
         onActionClick = { onEvent(FloatingEvent.OnActionClick(it)) },
@@ -113,6 +114,7 @@ fun FloatingAssistantView(
     canUndo: Boolean,
     currentTone: String,
     onBubbleClick: () -> Unit,
+    onDragStart: () -> Unit = {},
     onDrag: (Float, Float) -> Unit,
     onDragEnd: () -> Unit = {},
     onActionClick: (String) -> Unit,
@@ -359,6 +361,7 @@ fun FloatingAssistantView(
                             isChecking = isChecking,
                             badgeColor = badgeColor,
                             onClick = onBubbleClick,
+                            onDragStart = onDragStart,
                             onDrag = onDrag,
                             onDragEnd = onDragEnd
                         )
@@ -377,6 +380,7 @@ fun FloatingAssistantView(
                             isChecking = isChecking,
                             badgeColor = badgeColor,
                             onClick = onBubbleClick,
+                            onDragStart = onDragStart,
                             onDrag = onDrag,
                             onDragEnd = onDragEnd
                         )

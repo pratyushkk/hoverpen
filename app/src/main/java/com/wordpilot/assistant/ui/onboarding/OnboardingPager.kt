@@ -182,20 +182,41 @@ fun OnboardingPagerScreen(
                         isOptimized = isBatteryOptimized,
                         onRequestIgnore = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                var opened = false
                                 try {
                                     val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                                         data = Uri.parse("package:${context.packageName}")
                                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                     }
                                     context.startActivity(intent)
-                                } catch (_: android.content.ActivityNotFoundException) {
+                                    opened = true
+                                } catch (e: Exception) {
+                                    android.util.Log.w("Hoverpen", "Direct battery prompt failed in onboarding", e)
+                                }
+
+                                if (!opened) {
                                     try {
                                         val fallback = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
                                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                         }
                                         context.startActivity(fallback)
-                                    } catch (_: android.content.ActivityNotFoundException) {} catch (_: SecurityException) {}
-                                } catch (_: SecurityException) {}
+                                        opened = true
+                                    } catch (e: Exception) {
+                                        android.util.Log.w("Hoverpen", "Battery settings fallback failed in onboarding", e)
+                                    }
+                                }
+
+                                if (!opened) {
+                                    try {
+                                        val appSettings = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = Uri.parse("package:${context.packageName}")
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(appSettings)
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("Hoverpen", "App details fallback failed in onboarding", e)
+                                    }
+                                }
                             }
                         }
                     )

@@ -76,6 +76,7 @@ sealed interface UserFacingError {
 sealed interface FloatingEvent {
     data object OnBubbleClick : FloatingEvent
     data object OnBubbleLongClick : FloatingEvent
+    data object OnDragStart : FloatingEvent
     data class OnDrag(val dx: Float, val dy: Float) : FloatingEvent
     data object OnDragEnd : FloatingEvent
     data class OnAccept(val correctionId: String) : FloatingEvent

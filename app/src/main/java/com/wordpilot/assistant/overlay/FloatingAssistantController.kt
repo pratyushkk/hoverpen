@@ -350,13 +350,21 @@ class FloatingAssistantController(
         if (!isViewAttached) {
             attachOverlayView()
         }
+        mainHandler.post {
+            overlayView?.visibility = android.view.View.VISIBLE
+        }
+        mainHandler.post {
+            overlayView?.visibility = android.view.View.VISIBLE
+        }
     }
 
     fun hideAssistant() {
         _activeCorrection.value = null
         _errorCount.value = 0
         _uiState.value = FloatingUiState.COLLAPSED
-        detachOverlayView()
+        mainHandler.post {
+            overlayView?.visibility = android.view.View.GONE
+        }
     }
 
     fun setChecking(checking: Boolean) {
@@ -401,6 +409,9 @@ class FloatingAssistantController(
 
         if (!isViewAttached) {
             attachOverlayView()
+        }
+        mainHandler.post {
+            overlayView?.visibility = android.view.View.VISIBLE
         }
     }
 
@@ -914,9 +925,16 @@ class FloatingAssistantController(
     // WINDOW & OVERLAY MANAGEMENT
     // =========================================================================
 
+    fun onBubbleDragStart() {
+        snapAnimator?.cancel()
+        snapAnimator = null
+    }
+
     fun onDrag(deltaX: Float, deltaY: Float) {
         val view = overlayView ?: return
         val lp = windowLayoutParams ?: return
+        snapAnimator?.cancel()
+        snapAnimator = null
         val (screenWidth, screenHeight) = getScreenDimensions()
         val safeBounds = computeSafeBounds(context)
         val density = context.resources.displayMetrics.density
@@ -985,7 +1003,7 @@ class FloatingAssistantController(
 
         snapAnimator?.cancel()
         snapAnimator = android.animation.ValueAnimator.ofInt(lp.x, targetX).apply {
-            duration = 240L
+            duration = 220L
             interpolator = android.view.animation.DecelerateInterpolator(1.5f)
             addUpdateListener { animator ->
                 val animatedX = animator.animatedValue as Int
@@ -1005,6 +1023,7 @@ class FloatingAssistantController(
                     bubbleRestingX = targetX
                     _isNearRightEdge.value = targetX > screenWidth / 2
                     prefs.edit().putInt(KEY_X_PX, targetX).putInt(KEY_Y_PX, lp.y).apply()
+                    snapAnimator = null
                 }
             })
             start()
@@ -1215,6 +1234,7 @@ class FloatingAssistantController(
             is FloatingEvent.OnBubbleLongClick -> {
                 setUiState(FloatingUiState.COLLAPSED)
             }
+            is FloatingEvent.OnDragStart -> onBubbleDragStart()
             is FloatingEvent.OnDrag -> onDrag(event.dx, event.dy)
             is FloatingEvent.OnDragEnd -> onDragEnd()
             is FloatingEvent.OnAccept -> {
@@ -1253,7 +1273,9 @@ class FloatingAssistantController(
     }
 
     fun destroy() {
-        hideAssistant()
+        snapAnimator?.cancel()
+        snapAnimator = null
+        detachOverlayView()
         controllerScope.cancel()
         context.getSharedPreferences(AppearanceSettings.PREFS_NAME, Context.MODE_PRIVATE)
             .unregisterOnSharedPreferenceChangeListener(appearancePrefsListener)
