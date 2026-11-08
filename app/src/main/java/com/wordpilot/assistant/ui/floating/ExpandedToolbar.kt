@@ -1,5 +1,13 @@
 package com.wordpilot.assistant.ui.floating
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -12,7 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -91,7 +100,7 @@ fun ToolbarActionsContent(
         }
 
         if (correctionsToShow.isNotEmpty()) {
-            // Direct Corrected Word pills
+            // Direct Corrected Word pills with Material 3 Expressive Staggered Cascade
             Row(
                 modifier = Modifier
                     .weight(1f)
@@ -99,62 +108,12 @@ fun ToolbarActionsContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                correctionsToShow.forEach { correction ->
-                    val categoryColor = when (correction.category) {
-                        CorrectionCategory.SPELLING -> AssistantColors.BadgeSpelling
-                        CorrectionCategory.GRAMMAR -> AssistantColors.BadgeGrammar
-                        CorrectionCategory.PUNCTUATION -> AssistantColors.BadgePunctuation
-                        CorrectionCategory.STYLE -> AssistantColors.BadgeStyle
-                        CorrectionCategory.CAPITALIZATION -> AssistantColors.BadgeCapitalization
-                    }
-
-                    Surface(
-                        onClick = { onAcceptCorrection(correction) },
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color(0xFF10B981).copy(alpha = 0.22f),
-                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.75f)),
-                        modifier = Modifier
-                            .height(34.dp)
-                            .animateContentSize()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .clip(CircleShape)
-                                    .background(categoryColor)
-                            )
-
-                            if (correction.originalText.isNotBlank()) {
-                                Text(
-                                    text = correction.originalText,
-                                    color = Color(0xFFFF9999),
-                                    fontSize = 12.sp,
-                                    textDecoration = TextDecoration.LineThrough,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = "→",
-                                    color = Color.White.copy(alpha = 0.5f),
-                                    fontSize = 11.sp
-                                )
-                            }
-
-                            Text(
-                                text = correction.suggestedReplacement ?: "",
-                                color = Color(0xFF34D399),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
+                correctionsToShow.forEachIndexed { index, correction ->
+                    StaggeredCorrectionChip(
+                        correction = correction,
+                        index = index,
+                        onAccept = { onAcceptCorrection(correction) }
+                    )
                 }
 
                 IconButton(
@@ -296,5 +255,88 @@ fun ExpandedToolbar(
             onDismissCorrection = onDismissCorrection,
             onActionClick = onActionClick
         )
+    }
+}
+
+@Composable
+fun StaggeredCorrectionChip(
+    correction: Correction,
+    index: Int,
+    onAccept: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(correction.id) {
+        delay(index * 35L)
+        isVisible = true
+    }
+
+    val categoryColor = when (correction.category) {
+        CorrectionCategory.SPELLING -> AssistantColors.BadgeSpelling
+        CorrectionCategory.GRAMMAR -> AssistantColors.BadgeGrammar
+        CorrectionCategory.PUNCTUATION -> AssistantColors.BadgePunctuation
+        CorrectionCategory.STYLE -> AssistantColors.BadgeStyle
+        CorrectionCategory.CAPITALIZATION -> AssistantColors.BadgeCapitalization
+    }
+
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(
+            animationSpec = tween(180, easing = LinearOutSlowInEasing)
+        ) + slideInHorizontally(
+            animationSpec = tween(
+                durationMillis = 240,
+                easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+            ),
+            initialOffsetX = { it / 3 }
+        ),
+        exit = fadeOut(tween(100)) + shrinkHorizontally(tween(100)),
+        modifier = modifier
+    ) {
+        Surface(
+            onClick = onAccept,
+            shape = RoundedCornerShape(14.dp),
+            color = Color(0xFF10B981).copy(alpha = 0.22f),
+            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.75f)),
+            modifier = Modifier.height(34.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(categoryColor)
+                )
+
+                if (correction.originalText.isNotBlank()) {
+                    Text(
+                        text = correction.originalText,
+                        color = Color(0xFFFF9999),
+                        fontSize = 12.sp,
+                        textDecoration = TextDecoration.LineThrough,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "→",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 11.sp
+                    )
+                }
+
+                Text(
+                    text = correction.suggestedReplacement ?: "",
+                    color = Color(0xFF34D399),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }

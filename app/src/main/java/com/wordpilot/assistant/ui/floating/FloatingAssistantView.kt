@@ -153,13 +153,13 @@ fun FloatingAssistantView(
     val toolbarHeight = settings.toolbarHeightDp.dp
     val toolbarMaxWidth = settings.toolbarMaxWidthDp.dp
 
-    // Morphing Pill Dimensions
+    // Morphing Pill Dimensions with Material 3 Expressive Emphasized Decelerate motion
     val animatedWidth by animateDpAsState(
         targetValue = if (isExpanded) toolbarMaxWidth else bubbleSize,
         animationSpec = if (isExpanded) {
-            tween(durationMillis = 280, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))
+            tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
         } else {
-            tween(durationMillis = 220, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
+            tween(durationMillis = 200, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
         },
         finishedListener = { finalWidth ->
             if (uiState == FloatingUiState.COLLAPSED && finalWidth <= bubbleSize + 1.dp) {
@@ -172,9 +172,9 @@ fun FloatingAssistantView(
     val animatedHeight by animateDpAsState(
         targetValue = if (isExpanded) toolbarHeight else bubbleSize,
         animationSpec = if (isExpanded) {
-            tween(durationMillis = 280, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))
+            tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
         } else {
-            tween(durationMillis = 220, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
+            tween(durationMillis = 200, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
         },
         label = "pillHeight"
     )
@@ -182,9 +182,9 @@ fun FloatingAssistantView(
     val animatedCornerRadius by animateDpAsState(
         targetValue = if (isExpanded) settings.glassCornerRadiusDp.dp else (bubbleSize / 2),
         animationSpec = if (isExpanded) {
-            tween(durationMillis = 280, easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f))
+            tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
         } else {
-            tween(durationMillis = 220, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
+            tween(durationMillis = 200, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
         },
         label = "pillCornerRadius"
     )

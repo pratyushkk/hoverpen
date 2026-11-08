@@ -10,6 +10,11 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -88,6 +93,38 @@ fun FloatingBubble(
         animationSpec = tween(durationMillis = 350),
         label = "autoDimAnimation"
     )
+
+    // Luminous perimeter aura transition for active checking state
+    val luminousTransition = rememberInfiniteTransition(label = "luminousAura")
+    val luminousAngle by luminousTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "luminousAngle"
+    )
+
+    val checkingGlowAlpha by animateFloatAsState(
+        targetValue = if (isChecking) 1f else 0f,
+        animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing),
+        label = "checkingGlowAlpha"
+    )
+
+    val luminousColors = remember {
+        listOf(
+            Color(0xFF9333EA), // Vivid Purple
+            Color(0xFF38BDF8), // Electric Cyan
+            Color(0xFFEC4899), // Neon Pink
+            Color(0xFF818CF8), // Indigo
+            Color(0xFF06B6D4), // Cyan
+            Color(0xFF9333EA)  // Seamless 360 loop
+        )
+    }
+    val luminousBrush = remember(luminousColors) {
+        Brush.sweepGradient(luminousColors)
+    }
 
     val targetSizeDp = if (isExpanded) {
         (settings.toolbarHeightDp - 12f).coerceAtLeast(36f).dp
@@ -210,6 +247,25 @@ fun FloatingBubble(
             else -> -1
         }
 
+        // 1. Ambient luminous halo glow (outer diffuse aura) when checking
+        if (checkingGlowAlpha > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationZ = luminousAngle
+                        alpha = checkingGlowAlpha * 0.45f
+                        scaleX = 1.10f
+                        scaleY = 1.10f
+                    }
+                    .border(
+                        width = 3.dp,
+                        brush = luminousBrush,
+                        shape = shape
+                    )
+            )
+        }
+
         // Main bubble surface with shadow and gradient
         Surface(
             modifier = Modifier
@@ -224,7 +280,7 @@ fun FloatingBubble(
             color = Color.Transparent,
             border = BorderStroke(
                 settings.borderWidthDp.dp,
-                Color.White.copy(alpha = effectiveBorderAlpha)
+                Color.White.copy(alpha = effectiveBorderAlpha * (1f - checkingGlowAlpha * 0.8f))
             )
         ) {
             Box(
@@ -292,6 +348,23 @@ fun FloatingBubble(
                     }
                 }
             }
+        }
+
+        // 2. Crisp perimeter luminous border sweep directly hugging the bubble border
+        if (checkingGlowAlpha > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationZ = luminousAngle
+                        alpha = checkingGlowAlpha
+                    }
+                    .border(
+                        width = (settings.borderWidthDp + 0.5f).dp,
+                        brush = luminousBrush,
+                        shape = shape
+                    )
+            )
         }
     }
 }
